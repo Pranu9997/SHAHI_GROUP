@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Shahi Mutton Khanawal — Dashboard (Final Clean)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root{
+      --bg:#070707; --panel:#0f0f10; --muted:#9ca3af; --gold:#d4af37; --gold-2:#f2c94c;
+      --glass: rgba(255,255,255,0.02);
+    }
+    *{box-sizing:border-box}
+    html,body{
+  height:100%;
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(
+      135deg,
+      #05070f 0%,
+      #0b1224 40%,
+      #060b18 100%
+  );
+  color:#fff;
+}  a{color:inherit;text-decoration:none}
+    .topbar{position:fixed;left:0;right:0;top:0;height:72px;background:linear-gradient(90deg, rgba(212,175,55,0.06), rgba(0,0,0,0.25));backdrop-filter: blur(4px);border-bottom:1px solid rgba(212,175,55,0.06);display:flex;align-items:center;justify-content:space-between;padding:12px 20px;z-index:1000}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:flex;align-items:center;justify-content:center;color:#0a0a0a;font-weight:800}
+    .top-actions{display:flex;align-items:center;gap:12px}
+    .search{display:flex;align-items:center;background:var(--panel);border-radius:10px;padding:8px 10px;border:1px solid rgba(255,255,255,0.03);gap:8px}
+    .search input{background:transparent;border:none;outline:none;color:#fff;width:260px}
+    .app{
+  max-width:1400px;
+  margin:0 auto;
+  padding:20px 0px 20px;   /* ⭐ reduce top gap */
+  display:grid;
+  grid-template-columns:250px 1fr;
+  gap:20px;
+}
+    .sidebar{
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), var(--panel));
+  border-radius:12px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,0.03);
+  box-shadow:0 12px 36px rgba(0,0,0,0.6);
+  height:calc(100vh - 140px);
+  position:sticky;
+  top:88px;
+
+  margin-left:-65px;   /* ⭐ YE ADD KARO */
+}.nav-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;color:var(--muted);cursor:pointer;user-select:none}
+    .nav-item.active{background:linear-gradient(90deg, rgba(212,175,55,0.06), rgba(255,223,119,0.02));color:#fff;font-weight:600;border-left:3px solid var(--gold)}
+    main{min-height:calc(100vh - 140px)}
+   .panel{
+    
+  background:rgba(20,24,35,0.75);
+  margin-top:0;
+  border:1px solid rgba(255,255,255,0.08);
+  backdrop-filter:blur(22px);
+  border-radius:30px;
+  box-shadow:0 38px 30px rgba(0,0,0,0.45);
+  padding:28px;
+} .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:18px}
+    .card{padding:14px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.03)}
+    .pos-layout{display:grid;grid-template-columns:1fr 420px;gap:18px}
+    .menu-list{max-height:520px;overflow:auto;padding:10px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.02)}
+    .menu-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;margin-bottom:8px;background:transparent;border:1px solid rgba(255,255,255,0.02)}
+    .menu-item .meta .name{font-weight:700}
+    .menu-item .meta .cat{font-size:12px;color:var(--muted)}
+    .price{color:var(--gold);font-weight:700}
+    .add-btn{padding:8px 10px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--gold),var(--gold-2));color:#111;font-weight:700;cursor:pointer}
+    .bill-panel{display:flex;flex-direction:column;gap:12px}
+    .bill-items{min-height:160px;max-height:420px;overflow:auto;padding:12px;border-radius:10px;background:var(--panel);border:1px solid rgba(255,255,255,0.03)}
+    .bill-row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--gold),var(--gold-2));color:#111;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#fff}
+    .table-map{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:flex-start}
+    .table-unit{width:120px;height:120px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.015),rgba(0,0,0,0.1));display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+    .table-unit.available{box-shadow:0 8px 30px rgba(34,197,94,0.06);border-left:4px solid rgba(34,197,94,0.12)}
+    .table-unit.reserved{box-shadow:0 8px 30px rgba(244,196,120,0.06);border-left:4px solid rgba(244,196,120,0.12)}
+    .table-unit.ondine{box-shadow:0 8px 30px rgba(255,98,98,0.06);border-left:4px solid rgba(255,98,98,0.12)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal{background:#0b0b0b;padding:18px;border-radius:10px;width:420px;border:1px solid rgba(255,255,255,0.04)}
+    input,select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff;margin-top:6px}
+    @media (max-width:1100px){ .cards{grid-template-columns:repeat(2,1fr)} .pos-layout{grid-template-columns:1fr} .app{grid-template-columns:1fr;padding-top:96px} .sidebar{position:relative;height:auto;top:0;display:flex;flex-direction:row;overflow:auto;padding:12px} .sidebar .nav-item{flex:1;justify-content:center} }
+    @media (max-width:640px){ .cards{grid-template-columns:1fr} .search input{width:120px} }
+    .muted{color:var(--muted);font-size:13px}
+    .price-small{color:var(--gold);font-weight:700}
+    /* ---------- MOBILE RESPONSIVE FIX (100% Working) ---------- */
+
+@media (max-width: 768px) {
+
+    /* TOPBAR */
+    .topbar {
+        flex-direction: column;
+        height: auto;
+        padding: 12px;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .top-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .search {
+        width: 100%;
+    }
+
+    .search input {
+        width: 100%;
+    }
+
+    /* MAIN GRID */
+    .app {
+        grid-template-columns: 1fr;
+        padding: 140px 12px 20px;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px;
+        white-space: nowrap;
+        gap: 10px;
+    }
+
+    .nav-item {
+        flex: none;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* STAT CARDS */
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    /* POS LAYOUT */
+    .pos-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .bill-panel {
+        width: 100%;
+    }
+
+    /* TABLE MAP */
+    .table-map {
+        justify-content: center;
+    }
+
+    .table-unit {
+        width: 90px;
+        height: 90px;
+    }
+}
+
+
+/* ===== ADD THIS BELOW ===== */
+@media (max-width: 768px) {
+
+    .app {
+        display: block !important;
+        padding: 140px 12px 20px;
+    }
+
+    .sidebar {
+        display: flex !important;
+        position: static;
+        width: 100%;
+        height: auto;
+        overflow-x: auto;
+    }
+
+    main {
+        width: 100%;
+    }
+
+}
+.nav-item{
+  transition:all .25s ease;
+}
+
+.nav-item:hover{
+  background:rgba(255,255,255,0.06);
+  color:#fff;
+  transform:translateX(5px);
+}
+
+.dashboard-card{
+  padding:18px;
+  border-radius:18px;
+  background:linear-gradient(135deg,
+      rgba(255,215,115,0.14),
+      rgba(20,20,25,0.85));
+  border:1px solid rgba(255,215,115,0.28);
+  box-shadow:0 8px 25px rgba(0,0,0,0.45);
+  backdrop-filter:blur(10px);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  transition:0.3s;
+}
+
+.dashboard-card:hover{
+  transform:translateY(-5px);
+}
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(255,215,115,0.35);
+}
+.topbar button{
+  transition:all .3s ease;
+}
+
+.topbar button:hover{
+  transform:scale(1.05);
+}
+@media (max-width:768px){
+
+  .topbar{
+    flex-direction:column;
+    height:auto;
+    padding:10px;
+    gap:10px;
+  }
+
+  .topbar > div{
+    width:100%;
+    justify-content:center !important;
+  }
+
+  .app{
+    padding-top:170px;
+  }
+
+  .dashboard-card{
+    width:100%;
+  }
+}
+/* TODAY SUMMARY FIX */
+.summary-box{
+  display:flex;
+  gap:18px;
+  align-items:flex-start;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.summary-left{
+  flex:1;
+  min-width:250px;
+}
+
+.summary-right{
+  width:260px;
+}
+
+/* MOBILE FIX */
+@media (max-width:768px){
+  .summary-box{
+    flex-direction:column;
+  }
+
+  .summary-right{
+    width:100%;
+  }
+}
+  .summary-right{
+    max-width:320px;
+  }
+  .summary-right > div{
+   box-shadow:0 10px 30px rgba(0,0,0,0.45);
+}
+.dashboard-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow:
+        0 0 15px rgba(255,220,150,0.4),
+        0 0 30px rgba(255,150,80,0.35);
+}
+.dashboard-card:hover span {
+    color: white;
+}
+
+.table-card{
+    padding:16px;
+    border-radius:12px;
+    text-align:center;
+    font-weight:700;
+    color:white;
+    cursor:pointer;
+}
+
+/* colors */
+.available{ background:#16a34a; }   /* green */
+.reserved{ background:#d97706; }    /* orange */
+.ondine{ background:#dc2626; }      /* red */
+
+.table-map{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:12px;
+}
+
+.table-card{
+    background:#111827;
+    color:white;
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:700;
+}
+.table-card{
+    padding:18px;
+    border-radius:12px;
+    text-align:center;
+    font-weight:700;
+    color:white;
+    transition:0.3s;
+}
+.table-map{
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.table-card{
+    background:#111827;
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    color:white;
+    font-weight:700;
+}
+/* STATUS BASED COLORS */
+.available{
+    background:#16a34a;   /* green */
+}
+
+.reserved{
+    background:#d97706;   /* orange */
+}
+
+.ondine{
+    background:#dc2626;   /* red */
+}
+.table-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 0 12px rgba(255,255,255,0.2);
+}
+main{
+  margin:0 !important;
+  padding:0 !important;
+}
+.cards{
+   display:grid;
+   grid-template-columns: repeat(4,1fr);
+   gap:16px;
+}
+@media (max-width: 768px){
+
+  .cards{
+    grid-template-columns: 1fr;   /* mobile me one by one */
+  }
+
+  .dashboard-card{
+    padding:14px;
+    font-size:14px;
+  }
+
+}
+
+.dashboard-card{
+  border-radius:12px;
+  transition:.3s;
+}
+
+.dashboard-card:hover{
+  transform:translateY(-3px);
+}
+.topbar-new{
+    height:88px;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 28px;
+    background:linear-gradient(100deg,
+        rgba(255,215,115,0.22),
+        rgba(15,15,15,0.88),
+        rgba(255,215,115,0.12));
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,215,115,0.25);
+    box-shadow:0 6px 28px rgba(0,0,0,0.55);
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:9999;
+}
+/* ===== MOBILE FORCE MINI ===== */
+@media (max-width:768px){
+
+  body{
+    zoom: 0.5;
+  }
+
+}
+
+.history-wrap{
+  margin-top:14px;
+  overflow:auto;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.18));
+}
+.history-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:620px;
+}
+.history-table th,
+.history-table td{
+  padding:10px 12px;
+  text-align:left;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.history-table th{
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#d7c8a1;
+}
+.history-table td{
+  font-size:14px;
+  color:#f3f3f3;
+}
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+.status-pill.pending{
+  background:rgba(240,173,78,0.16);
+  color:#ffd58d;
+  border:1px solid rgba(240,173,78,0.35);
+}
+.status-pill.paid{
+  background:rgba(60,179,113,0.16);
+  color:#9ff0bf;
+  border:1px solid rgba(60,179,113,0.35);
+}
+.empty-history{
+  text-align:center;
+  color:var(--muted);
+}
+
+  </style>
+</head>
+
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  /upar wala Dashboard hai/
+ <div class="topbar-new
+    height:88px;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 28px;
+    background:linear-gradient(100deg, rgba(255,215,115,0.22), rgba(15,15,15,0.88), rgba(255,215,115,0.12));
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(255,215,115,0.25);
+    box-shadow:0 6px 28px rgba(0,0,0,0.55);
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:9999;
+">
+
+    <!-- LEFT SIDE: BRAND -->
+    <div style="display:flex;align-items:center;gap:20px;">
+
+        <!-- PREMIUM LOGO -->
+        <div style="
+            width:62px;
+            height:62px;
+            border-radius:14px;
+            overflow:hidden;
+            background:linear-gradient(135deg,#f9d78b,#b58621);
+            box-shadow:0 6px 22px rgba(255,215,110,0.45);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            border:2px solid rgba(255,255,255,0.18);
+        ">
+            <img src='/static/images/logo.jpg' style="width:100%;height:100%;object-fit:cover;">
+        </div>
+
+        <!-- BRAND NAME -->
+        <div style="display:flex;flex-direction:column;line-height:1.2;">
+            <span style="
+                font-size:24px;
+                font-weight:800;
+                color:#f9e8c9;
+                letter-spacing:0.8px;
+                text-shadow:0 0 10px rgba(255,215,120,0.45);
+            ">
+                Shahi Mutton Khanawal
+            </span>
+
+            <span style="
+                font-size:13px;
+                color:#dac89d;
+                opacity:0.9;
+                letter-spacing:0.5px;
+            ">
+                 Admin Dashboard • POS System
+            </span>
+        </div>
+
+    </div>
+
+
+    <!-- CENTER: SEARCH BAR -->
+    <div style="
+        flex:1;
+        display:flex;
+        justify-content:center;
+        padding:0 40px;
+    ">
+        <div style="
+            width:60%;
+            display:flex;
+            align-items:center;
+            background:rgba(255,255,255,0.08);
+            padding:10px 16px;
+            border-radius:14px;
+            gap:10px;
+            border:1px solid rgba(255,255,255,0.10);
+            box-shadow:0 4px 16px rgba(0,0,0,0.35);
+        ">
+            <i class="fa fa-search" style="color:#d7c289;font-size:16px;"></i>
+            <input id="globalSearch" placeholder="Search menu, tables, items..." 
+            style="
+                flex:1;
+                background:transparent;
+                border:none;
+                outline:none;
+                color:#f1e6c7;
+                font-size:14px;
+            ">
+        </div>
+    </div>
+
+
+    <!-- RIGHT PANEL: ACTIONS + USER -->
+    <div style="display:flex;align-items:center;gap:16px;">
+
+        <!-- QUICK ACTION: Add Item -->
+        <button onclick="document.querySelector('#openAddItem').click()" style="
+            padding:10px 16px;
+            background:linear-gradient(135deg,#f5d27c,#ad7f1f);
+            border:none;
+            border-radius:12px;
+            color:#111;
+            font-weight:700;
+            cursor:pointer;
+            box-shadow:0 4px 16px rgba(255,215,110,0.4);
+        ">
+            <i class="fa fa-plus"></i> Add Item
+        </button>
+
+        <!-- QUICK ACTION: New Bill -->
+        <button onclick="document.querySelector('#navCreateBill').click()" style="
+            padding:10px 16px;
+            background:rgba(255,255,255,0.08);
+            border:1px solid rgba(255,215,115,0.25);
+            border-radius:12px;
+            color:#f0d9a0;
+            font-weight:700;
+            cursor:pointer;
+        ">
+            <i class="fa fa-receipt"></i> Billing
+        </button>
+
+        <!-- LOGOUT BUTTON -->
+        <button onclick="location.href='/logout'" style="
+            padding:10px 16px;
+            background:linear-gradient(135deg,#ff6d6d,#c92a2a);
+            border:none;
+            border-radius:12px;
+            color:white;
+            font-weight:700;
+            cursor:pointer;
+            box-shadow:0 6px 16px rgba(255,80,80,0.45);
+        ">
+            <i class="fa fa-sign-out-alt"></i> Logout
+        </button>
+
+      <!-- USER AVATAR -->
+<div style="
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    overflow:hidden;
+    border:2px solid rgba(255,255,255,0.22);
+    box-shadow:0 6px 18px rgba(255,200,90,0.45);
+">
+    <img src="{{ url_for('static', filename='images/PROFILE.jpg') }}"
+         style="width:100%; height:100%; object-fit:cover;">
+</div>
+
+    </div>
+
+</div>
+/upar wala Dashboard hai/
+
+    <div class="top-actions">
+      <div class="search">
+        <i class="fa fa-search" style="color:var(--muted)"></i>
+        <input id="globalSearch" placeholder="Search menu / table / invoice..." />
+      </div>
+
+      <button class="btn ghost" id="openAddItem"><i class="fa fa-plus"></i> Add Item</button>
+      <button class="btn ghost" onclick="location.href='/logout'"><i class="fa fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="app" role="application">
+    <aside class="sidebar" aria-label="Navigation">
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;color:var(--muted)">Welcome</div>
+        <div style="font-weight:700;font-size:18px;color:var(--gold)">Pranav </div>
+      </div>
+
+      <div>
+        <div class="nav-item active" data-target="panelOverview"><i class="fa fa-tachometer-alt"></i> Overview</div>
+        <div class="nav-item" data-target="panelMenu"><i class="fa fa-utensils"></i> Menu</div>
+
+
+        <div class="nav-item" onclick="location.href='/billing'">
+    <i class="fa fa-receipt"></i> Billing / POS
+</div>
+
+        <div class="nav-item" data-target="panelTables"><i class="fa fa-chair"></i> Tables</div>
+        <div class="nav-item" data-target="panelReports"><i class="fa fa-chart-line"></i> Reports</div>
+      </div>
+    </aside>
+
+<main>
+
+<section id="panelOverview" class="panel section active">
+
+  <h2>Overview</h2>
+  <div class="muted">
+    Live snapshot — sales, orders and occupancy
+  </div>
+
+  <div class="cards" style="
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:18px;
+  ">
+  <!-- CARD 1 -->
+<div class="dashboard-card">
+  <span style="color:#d8c79f;font-size:14px;font-weight:600;">
+    Today's Orders
+  </span>
+  <span id="k_orders" style="
+      font-size:30px;
+      font-weight:800;
+      color:#ffe8a8;
+      text-shadow:0 0 14px rgba(255,210,120,0.6);
+  ">
+      —
+  </span>
+</div>
+
+<!-- CARD 2 -->
+<div class="dashboard-card">
+  <span style="color:#d8c79f;font-size:14px;font-weight:600;">
+    Today’s Revenue
+  </span>
+  <span id="k_revenue" style="
+      font-size:30px;
+      font-weight:800;
+      color:#ffd884;
+      text-shadow:0 0 14px rgba(255,210,120,0.6);
+  ">
+      ₹ {{ today_revenue }}
+  </span>
+</div>
+
+<!-- CARD 3 -->
+<div class="dashboard-card">
+  <span style="color:#d8c79f;font-size:14px;font-weight:600;">
+    Occupied Tables
+  </span>
+  <span id="k_tables" style="
+      font-size:30px;
+      font-weight:800;
+      color:#ffe8a8;
+      text-shadow:0 0 14px rgba(255,210,120,0.6);
+  ">
+      —
+  </span>
+</div>
+
+<!-- CARD 4 -->
+<div class="dashboard-card">
+  <span style="color:#d8c79f;font-size:14px;font-weight:600;">
+    Pending Payments
+  </span>
+  <span id="k_pending" style="
+      font-size:30px;
+      font-weight:800;
+      color:#ffd884;
+      text-shadow:0 0 14px rgba(255,210,120,0.6);
+  ">
+      —
+  </span>
+</div>
+</div>
+      
+      <div class="panel summary-box">
+         
+
+       <div class="summary-right" style="width:100%">
+            <div style="font-weight:700;color:var(--gold)">Quick Actions</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+              <button class="btn" id="navCreateBill"><i class="fa fa-plus"></i> New Bill</button>
+              <button class="btn ghost" id="navFindMenu"><i class="fa fa-utensils"></i> Find Menu</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div style="font-weight:700;color:var(--gold)">Bills History</div>
+            <div class="muted">Latest bills with amount and status</div>
+          </div>
+          <div class="history-wrap">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Bill No</th>
+                  <th>Table</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="billHistoryBody">
+                <tr><td colspan="4" class="empty-history">Loading history...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="panelMenu" class="panel section" style="display:none">
+        <h2>Menu Management</h2>
+        <div class="muted">Add new items, edit or delete existing items.</div>
+
+        <div style="display:flex;gap:18px;margin-top:12px;align-items:flex-start">
+          <div style="width:320px" class="panel">
+            <div style="font-weight:700">Add Item</div>
+            <div style="margin-top:10px">
+              <label>Item name</label>
+              <input id="add_item_name" placeholder="e.g. Shahi Mutton Biryani">
+              <label style="margin-top:8px">Category</label>
+              <select id="add_item_cat">
+                <option>Non-Veg</option>
+                <option>Veg</option>
+              </select>
+              <label style="margin-top:8px">Price (₹)</label>
+              <input id="add_item_price" type="number" step="0.01" placeholder="e.g. 240.00">
+              <div style="display:flex;gap:10px;margin-top:10px">
+                <button class="btn" id="addItemBtn"><i class="fa fa-plus"></i> Add Item</button>
+                <button class="btn ghost" id="resetAdd">Reset</button>
+              </div>
+              <div id="addMsg" style="margin-top:8px;color:var(--muted);font-size:13px"></div>
+            </div>
+          </div>
+
+          <div style="flex:1" class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="font-weight:700">Menu Items</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="menuFilter" placeholder="Search menu..." style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:#fff">
+                <div class="muted">Total: <span id="menuCount">0</span></div>
+              </div>
+            </div>
+
+            <div class="menu-list" id="menuList">
+            </div>
+          </div>
+        </div>
+      </section>
+
+     
+      <section id="panelTables" class="panel section"  style="display:none">
+        <h2>Tables</h2>
+        <div class="muted">Click a table to toggle status (Available → Reserved → On-dine)</div>
+
+        <div style="margin-top:12px" class="table-map" id="tableMap"></div>
+     
+      </section>
+
+      <section id="panelReports" class="panel section" style="display:none">
+        <h2>Reports</h2>
+        <div class="muted">Exports & daily summaries.</div>
+        <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn ghost" id="generateReport">Generate PDF</button>
+        </div>
+      </section>
+
+      <div class="muted" style="text-align:center;margin-top:10px">© 2026 Shahi Mutton Khanawal — Final Dashboard</div>
+    </main>
+  </div>
+
+  <div id="addModal" style="display:none">
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Add New Item</div>
+          <button class="btn ghost" id="closeModal"><i class="fa fa-times"></i></button>
+        </div>
+        <div style="margin-top:12px">
+          <label>Item name</label>
+          <input id="modal_item_name" placeholder="e.g. Shahi Mutton Biryani">
+          <label style="margin-top:8px">Category</label>
+          <select id="modal_item_cat"><option>Non-Veg</option><option>Veg</option></select>
+          <label style="margin-top:8px">Price (₹)</label>
+          <input id="modal_item_price" type="number" step="0.01" placeholder="e.g. 240.00">
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" id="modalAddBtn">Add</button>
+            <button class="btn ghost" id="modalCancelBtn">Cancel</button>
+          </div>
+          <div id="modalMsg" style="margin-top:8px;color:var(--muted)"></div>
+        </div>
+      </div>
+    </div>
+  
+
+ <script>
+
+
+const API = { items:'/api/items', addItem:'/api/menu/add', tables:'/api/tables' };
+const LS = { ITEMS:'smk_items_v2', TABLES:'smk_tables_v2' };
+const qs = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
+function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function tryFetch(url, opts={}, timeout=3500){ const controller=new AbortController(); const id=setTimeout(()=>controller.abort(),timeout); try{ const res=await fetch(url,{...opts,signal:controller.signal}); clearTimeout(id); if(!res.ok) throw new Error('Bad response'); return res; }catch(e){ clearTimeout(id); throw e; } }
+
+
+
+/* Data layer */
+async function getItems(){
+  try{ const r=await tryFetch(API.items); const data=await r.json(); localStorage.setItem(LS.ITEMS, JSON.stringify(data)); return data; }
+  catch(e){ const local=localStorage.getItem(LS.ITEMS); if(local) return JSON.parse(local); localStorage.setItem(LS.ITEMS, JSON.stringify(demoItems)); return demoItems; }
+}
+function saveItemsLocal(items){
+  localStorage.setItem(LS.ITEMS, JSON.stringify(items));
+}
+async function addItemToServer(payload){
+  try{
+    const r = await tryFetch(API.addItem,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+
+    const json = await r.json();
+
+    if(json && json.items)
+        saveItemsLocal(json.items);
+
+    return json.items || json;
+  }
+  catch(e){
+    const arr = JSON.parse(localStorage.getItem(LS.ITEMS)||'[]');
+    const id = arr.length ? Math.max(...arr.map(x=>x.id))+1 : 1;
+
+    arr.unshift({
+      id,
+      item_name:payload.item_name,
+      category:payload.category,
+      price:parseFloat(payload.price)
+    });
+
+    localStorage.setItem(LS.ITEMS, JSON.stringify(arr));
+
+    return arr;
+  }
+}
+async function getTables(){
+  try{ const r=await tryFetch(API.tables); const data=await r.json(); localStorage.setItem(LS.TABLES, JSON.stringify(data)); return data; }
+  catch(e){ const local=localStorage.getItem(LS.TABLES); if(local) return JSON.parse(local); const t=Array.from({length:10},(_,i)=>({table_no:i+1,status:'available'})); localStorage.setItem(LS.TABLES, JSON.stringify(t)); return t; }
+}
+async function updateTableServer(table_no,status){
+  try{ const r=await tryFetch(API.tables + '/' + table_no,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}); const json=await r.json(); const tables=JSON.parse(localStorage.getItem(LS.TABLES)||'[]'); const idx=tables.findIndex(x=>x.table_no==table_no); if(idx>-1){ tables[idx].status=status; localStorage.setItem(LS.TABLES, JSON.stringify(tables)); } return json; }
+  catch(e){ const tables=JSON.parse(localStorage.getItem(LS.TABLES)||'[]'); const idx=tables.findIndex(x=>x.table_no==table_no); if(idx>-1){ tables[idx].status=status; localStorage.setItem(LS.TABLES, JSON.stringify(tables)); } return null; }
+}
+async function loadTables(){
+
+    const res = await fetch('/api/tables');
+    const data = await res.json();
+
+    const map = document.getElementById("tableMap");
+    map.innerHTML = "";
+
+    data.forEach(t => {
+
+        let card = document.createElement("div");
+
+        card.className =
+            "table-card " + t.status.toLowerCase();
+
+        card.innerHTML =
+            "Table " + t.table_no + "<br>" + t.status;
+
+        map.appendChild(card);
+    });
+}
+
+
+/*todays order code*/
+
+function loadTodayOrders() {
+
+    fetch('/today-orders')
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("k_orders").innerText = data.length;
+        renderBillHistory(data);
+
+    })
+    .catch(err => {
+        console.log(err);
+    });
+}
+
+loadTodayOrders();
+setInterval(loadTodayOrders, 5000);
+
+/*ocuppied tables */
+
+function loadOccupiedTables() {
+
+    fetch('/api/tables')
+    .then(res => res.json())
+    .then(data => {
+
+        // sirf occupied count
+        let occupied = data.filter(t => t.status === "Occupied").length;
+
+        document.getElementById("k_tables").innerText = occupied;
+    })
+    .catch(err => console.log(err));
+}
+
+loadOccupiedTables();
+setInterval(loadOccupiedTables, 5000);
+loadTables();
+
+
+/*pending payment*/
+
+
+function loadPendingOrders() {
+
+    fetch('/today-orders')
+    .then(res => res.json())
+    .then(data => {
+
+        // sirf pending count
+        let pending = data.filter(
+            o => o.status.toLowerCase() === "pending"
+        ).length;
+
+        document.getElementById("k_pending").innerText = pending;
+
+    })
+    .catch(err => console.log(err));
+}
+
+loadPendingOrders();
+setInterval(loadPendingOrders, 5000);
+
+function renderBillHistory(rows) {
+    const tbody = document.getElementById("billHistoryBody");
+    if (!tbody) return;
+
+    const history = Array.isArray(rows) ? rows.slice(0, 20) : [];
+    if (!history.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-history">No bill history found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = history.map((row) => {
+        const amount = parseFloat(row.amount || 0).toFixed(2);
+        const statusRaw = (row.status || "").toString();
+        const status = statusRaw || "Unknown";
+        const statusClass = status.toLowerCase() === "paid" ? "paid" : "pending";
+
+        return `
+            <tr>
+                <td>${row.bill_no || "-"}</td>
+                <td>${row.table_number || "-"}</td>
+                <td>₹ ${amount}</td>
+                <td><span class="status-pill ${statusClass}">${status}</span></td>
+            </tr>
+        `;
+    }).join("");
+}
+
+
+
+/* RENDERERS */
+async function renderMenuList(){
+  const items = await getItems();
+  const list = qs('#menuList'); 
+ 
+
+  // ✅ Safety check
+if(!list){
+   return;
+}
+
+  list.innerHTML = ''; 
+  
+
+  items.forEach(it=>{
+    const html = `
+      <div class="menu-item">
+        <div class="meta">
+          <div class="name">${escapeHtml(it.item_name)}</div>
+          <div class="cat">${escapeHtml(it.category)}</div>
+        </div>
+
+        <div style="text-align:right">
+          <div class="price">₹ ${parseFloat(it.price).toFixed(2)}</div>
+
+          <button 
+            class="add-btn" 
+            data-id="${it.id}" 
+            data-name="${escapeHtml(it.item_name)}" 
+            data-price="${it.price}">
+            <i class="fa fa-plus"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    list.insertAdjacentHTML('beforeend', html);
+  });
+
+  qs('#menuCount').textContent = items.length;
+}
+
+
+async function renderTables(){
+  const tables = await getTables(); const wrap = qs('#tableMap'); wrap.innerHTML = '';
+  tables.forEach(t=>{
+    const d=document.createElement('div'); d.className='table-unit '+(t.status||'available'); d.dataset.table=t.table_no; d.innerHTML=`<div class="table-label">Table ${t.table_no}</div><div class="table-sub">${t.status}</div>`;
+    d.addEventListener('click', async ()=>{ let next='reserved'; if(d.classList.contains('available')) next='reserved'; else if(d.classList.contains('reserved')) next='ondine'; else next='available'; d.classList.remove('available','reserved','ondine'); d.classList.add(next); d.querySelector('.table-sub').textContent=next; await updateTableServer(t.table_no,next); });
+    wrap.appendChild(d);
+  });
+  const occ = tables.filter(x=>x.status==='ondine').length; qs('#k_tables').textContent = `${occ} / ${tables.length}`;
+}
+
+/* ========== Dashboard UI ========== */
+
+/* ---------- UI Handlers (modal safe using closest) ---------- */
+document.addEventListener('click', e=>{
+  const t = e.target.closest('#modalCancelBtn, #closeModal, #modalBackdrop');
+  if(t) closeModal();
+});
+
+/* Add item form handlers */
+qs('#addItemBtn').addEventListener('click', async ()=>{
+  const name = qs('#add_item_name').value.trim(); 
+  const cat = qs('#add_item_cat').value; 
+  const price = qs('#add_item_price').value;
+
+  if(!name || !price){ 
+    qs('#addMsg').textContent = 'Provide name and price'; 
+    return; 
+  }
+
+  qs('#addMsg').textContent = 'Adding...';
+
+  await addItemToServer({
+    item_name: name,
+    category: cat,
+    price: price
+  });
+
+  await renderMenuList();
+
+  qs('#addMsg').textContent = 'Added'; 
+  qs('#add_item_name').value=''; 
+  qs('#add_item_price').value='';
+
+  setTimeout(()=>qs('#addMsg').textContent='',1200);
+});
+
+qs('#resetAdd').addEventListener('click', ()=>{ qs('#add_item_name').value=''; qs('#add_item_price').value=''; });
+
+qs('#openAddItem').addEventListener('click', ()=> openModal());
+function openModal(){ qs('#addModal').style.display='block'; qs('#modal_item_name').value=''; qs('#modal_item_price').value=''; qs('#modalMsg').textContent=''; }
+function closeModal(){ qs('#addModal').style.display='none'; }
+qs('#modalAddBtn').addEventListener('click', async ()=>{
+  const name = qs('#modal_item_name').value.trim(); const cat = qs('#modal_item_cat').value; const price = qs('#modal_item_price').value;
+  if(!name || !price){ qs('#modalMsg').textContent = 'Fill name & price'; return; }
+  qs('#modalMsg').textContent = 'Adding...';
+  await addItemToServer({item_name:name,category:cat,price:price});
+  await renderMenuList(); closeModal();
+});
+/* Navigation */
+qsa('.nav-item').forEach(nav=>{
+  nav.addEventListener('click', ()=>{
+
+    qsa('.nav-item').forEach(n=>n.classList.remove('active'));
+    nav.classList.add('active');
+
+    const target = nav.getAttribute('data-target');
+
+    qsa('.section').forEach(s=>{
+      s.style.display='none';
+      s.classList.remove('active');
+    });
+
+    const panel = qs('#'+target);
+    panel.style.display='block';
+
+    setTimeout(()=>{
+      panel.classList.add('active');
+    },50);
+
+  });
+});
+/* Filters & search */
+const menuFilter = qs('#menuFilter');
+if(menuFilter){
+  menuFilter.addEventListener('input', e=>{
+    const q=e.target.value.toLowerCase();
+    qsa('#menuList .menu-item').forEach(tr=>{
+      tr.style.display = (q==='' || tr.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
+  });
+}
+
+qs('#globalSearch').addEventListener('input', e=>{ const q=e.target.value.toLowerCase(); qsa('.menu-item').forEach(mi=> mi.style.display = (q==='' || mi.textContent.toLowerCase().includes(q)) ? '' : 'none'); qsa('.table-unit').forEach(tu=> tu.style.display = (q==='' || tu.textContent.toLowerCase().includes(q)) ? '' : 'none'); });
+
+/* Other buttons */
+qs('#navCreateBill').onclick = ()=>{
+   window.location.href="/billing";
+};
+
+qs('#navFindMenu').onclick = ()=>{
+   document.querySelector('[data-target="panelMenu"]').click();
+};
+
+const generateReportBtn = qs('#generateReport');
+if(generateReportBtn){
+  generateReportBtn.onclick = ()=>{
+    window.open('/reports/bills/pdf', '_blank');
+  };
+}
+
+/* Init */
+async function init(){ 
+  try{ 
+    await renderMenuList(); 
+    await loadTables();
+
+  }catch(e){ 
+    console.error('Init error', e); 
+  } 
+}
+init();
+
+window.addEventListener("DOMContentLoaded", () => {
+
+   document.querySelector(
+     '.nav-item[data-target="panelOverview"]'
+   ).click();
+
+});
+
+setInterval(loadTodayOrders, 5000);
+setInterval(loadOccupiedTables, 5000);
+setInterval(loadPendingOrders, 5000);
+  </script>
+  
+</body>
+</html>
