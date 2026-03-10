@@ -243,6 +243,7 @@ def forgot_password():
             )
 
         try:
+            conn = get_db()
 
             cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cur.execute("SELECT id FROM users WHERE email=%s LIMIT 1", (email,))
