@@ -420,7 +420,17 @@ def today_orders():
     cur.close()
     conn.close()
 
-    return jsonify(data)
+    rows = [
+        {
+            "bill_no": row["bill_no"],
+            "table_number": row["table_number"],
+            "amount": float(row["amount"] or 0),
+            "status": row["status"]
+        }
+        for row in data
+    ]
+
+    return jsonify(rows)
 
 
 @app.route('/reports/bills.csv')
