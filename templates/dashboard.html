@@ -968,7 +968,7 @@ function loadOccupiedTables() {
     .then(data => {
 
         // sirf occupied count
-        let occupied = data.filter(t => t.status === "Occupied").length;
+        let occupied = data.filter(t => t.status === "ondine").length;
 
         document.getElementById("k_tables").innerText = occupied;
     })
@@ -1075,15 +1075,7 @@ if(!list){
 }
 
 
-async function renderTables(){
-  const tables = await getTables(); const wrap = qs('#tableMap'); wrap.innerHTML = '';
-  tables.forEach(t=>{
-    const d=document.createElement('div'); d.className='table-unit '+(t.status||'available'); d.dataset.table=t.table_no; d.innerHTML=`<div class="table-label">Table ${t.table_no}</div><div class="table-sub">${t.status}</div>`;
-    d.addEventListener('click', async ()=>{ let next='reserved'; if(d.classList.contains('available')) next='reserved'; else if(d.classList.contains('reserved')) next='ondine'; else next='available'; d.classList.remove('available','reserved','ondine'); d.classList.add(next); d.querySelector('.table-sub').textContent=next; await updateTableServer(t.table_no,next); });
-    wrap.appendChild(d);
-  });
-  const occ = tables.filter(x=>x.status==='ondine').length; qs('#k_tables').textContent = `${occ} / ${tables.length}`;
-}
+
 
 /* ========== Dashboard UI ========== */
 
