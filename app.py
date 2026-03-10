@@ -664,6 +664,7 @@ def get_pending_bill(table_no):
             SELECT items, status
             FROM billing
             WHERE table_number=%s
+              AND LOWER(status) = 'pending'
             ORDER BY id DESC
             LIMIT 1
         """, (table_no,))
@@ -672,14 +673,12 @@ def get_pending_bill(table_no):
         cur.close()
         conn.close()
 
-        # ⭐ IMPORTANT LOGIC
-        if row and row["status"].lower() == "pending":
+        if row:
             return jsonify({
                 "items": row["items"],
                 "status": row["status"]
             }), 200
 
-        # Paid ya koi aur status ho → empty bhejo
         return jsonify({"items": None}), 200
 
     except Exception as e:
