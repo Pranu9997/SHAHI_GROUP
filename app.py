@@ -822,15 +822,25 @@ def api_billing():
 # -------------------------
 @app.route('/api/tables', methods=['GET'])
 def api_tables():
-    try: 
+    try:
         conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur = conn.cursor()
+
         cur.execute("SELECT table_no, status FROM tables ORDER BY table_no ASC")
         rows = cur.fetchall()
-        
+
+        tables = []
+        for r in rows:
+            tables.append({
+                "table_no": r[0],
+                "status": r[1]
+            })
+
         cur.close()
         conn.close()
-        return jsonify(rows), 200
+
+        return jsonify(tables), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     

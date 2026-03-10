@@ -931,8 +931,8 @@ async function loadTables(){
         card.className =
             "table-card " + t.status.toLowerCase();
 
-        card.innerHTML =
-            "Table " + t.table_no + "<br>" + t.status;
+       card.innerHTML =
+              "Table " + t[0] + "<br>" + t[1];
 
         map.appendChild(card);
     });
