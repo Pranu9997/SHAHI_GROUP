@@ -926,18 +926,19 @@ async function loadTables(){
 
     data.forEach(t => {
 
+        let tableNo = t.table_no || t[0];
+        let status = t.status || t[1];
+
         let card = document.createElement("div");
 
-        card.className =
-            "table-card " + t.status.toLowerCase();
+        card.className = "table-card " + status;
 
-       card.innerHTML =
-              "Table " + t[0] + "<br>" + t[1];
+        card.innerHTML =
+            "Table " + tableNo + "<br>" + status;
 
         map.appendChild(card);
     });
 }
-
 
 /*todays order code*/
 
