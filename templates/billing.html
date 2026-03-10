@@ -784,7 +784,7 @@ function renderRecentBills(){
 /* ========== FINAL POS ENGINE (FIXED WORKING VERSION) ========== */
 /* ========== FINAL POS ENGINE (FIXED WORKING VERSION) ========== */
 
-let bill = { items: [] };
+let bill = { bill_no: null, items: [] };
 
 function isGstApplied(){
   const gstToggle = qs('#applyGst');
@@ -814,6 +814,7 @@ function removeItem(index){
 }
 
 function clearBill(){
+  bill.bill_no = null;
   bill.items = [];
   renderBill();
 }
@@ -1133,7 +1134,7 @@ sound.play().catch(e => console.log("Sound blocked"));
   const gstApplied = isGstApplied();
 
   const payload = { 
-    bill_no: 'INV' + Date.now(),
+    bill_no: bill.bill_no || ('INV' + Date.now()),
     table_number: table,
     items: JSON.stringify(bill.items),
     amount: parseFloat(totalText),
@@ -1188,9 +1189,12 @@ async function loadPendingBillFromServer(tableNo){
     console.log("Pending API Data:", data);
 
     bill.items = [];
+    bill.bill_no = null;
 
     if(!data.items){
       console.log("No pending items found");
+      document.getElementById("bill_status").value = "Pending";
+      syncBillStatusStyle();
       renderBill();
       return;
     }
@@ -1199,6 +1203,7 @@ async function loadPendingBillFromServer(tableNo){
     const itemsArray = JSON.parse(data.items);  // ✅ FIX HERE
 
     console.log("Decoded Pending Items:", itemsArray);
+    bill.bill_no = data.bill_no || null;
 
     itemsArray.forEach(it => {
       bill.items.push({
@@ -1209,6 +1214,7 @@ async function loadPendingBillFromServer(tableNo){
     });
 
     document.getElementById("bill_status").value = data.status;
+    syncBillStatusStyle();
 
     console.log("✅ Final Bill Items:", bill.items);
 

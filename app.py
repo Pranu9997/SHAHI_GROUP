@@ -661,7 +661,7 @@ def get_pending_bill(table_no):
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cur.execute("""
-            SELECT items, status
+            SELECT bill_no, items, status
             FROM billing
             WHERE table_number=%s
               AND LOWER(status) = 'pending'
@@ -675,6 +675,7 @@ def get_pending_bill(table_no):
 
         if row:
             return jsonify({
+                "bill_no": row["bill_no"],
                 "items": row["items"],
                 "status": row["status"]
             }), 200
@@ -799,13 +800,30 @@ def api_billing():
         status = data.get('status', 'Pending')
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
         cur.execute(
-            "INSERT INTO billing (bill_no, table_number, items, amount, status) VALUES (%s, %s, %s, %s, %s)",
-            (bill_no, table_number, items_text, amount, status)
+            "SELECT id FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1",
+            (bill_no,)
         )
+        existing = cur.fetchone()
+
+        if existing:
+            cur.execute(
+                """
+                UPDATE billing
+                SET table_number=%s, items=%s, amount=%s, status=%s
+                WHERE id=%s
+                """,
+                (table_number, items_text, amount, status, existing["id"])
+            )
+        else:
+            cur.execute(
+                "INSERT INTO billing (bill_no, table_number, items, amount, status) VALUES (%s, %s, %s, %s, %s)",
+                (bill_no, table_number, items_text, amount, status)
+            )
         conn.commit()
 
-        cur.execute("SELECT * FROM billing ORDER BY id DESC")
+        cur.execute("SELECT * FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1", (bill_no,))
         saved = cur.fetchone()
         cur.close()
         conn.close()
