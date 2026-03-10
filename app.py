@@ -46,7 +46,7 @@ def get_db():
         database="postgres",
         user="postgres",
         password="Shahi@Pranav",
-        port=5432
+        port=5432,
         sslmode="require"
     )
     return conn
