@@ -42,15 +42,14 @@ import psycopg2
 
 def get_db():
     conn = psycopg2.connect(
-        host="db.kheoeudkirehzncxuqkj.supabase.co",
+        host="aws-1-ap-northeast-2.pooler.supabase.com",
         database="postgres",
-        user="postgres",
+        user="postgres.kheoeudkirehzncxuqkj",
         password="Shahi@Pranav",
         port=5432,
         sslmode="require"
     )
     return conn
-
 @app.route('/')
 def home():
     return redirect(url_for('login'))
