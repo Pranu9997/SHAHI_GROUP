@@ -379,6 +379,7 @@ def dashboard():
 
 @app.route("/today-orders")
 def today_orders():
+
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
@@ -386,25 +387,28 @@ def today_orders():
         """
         SELECT bill_no, table_number, amount, status
         FROM billing
+        WHERE DATE(created_at) = CURRENT_DATE
         ORDER BY id DESC
     """
     )
 
-    data = cur.fetchall()
+    rows = cur.fetchall()
+
     cur.close()
     conn.close()
 
-    rows = [
-        {
-            "bill_no": row["bill_no"],
-            "table_number": row["table_number"],
-            "amount": float(row["amount"] or 0),
-            "status": row["status"],
-        }
-        for row in data
-    ]
+    result = []
+    for r in rows:
+        result.append(
+            {
+                "bill_no": r["bill_no"],
+                "table_number": r["table_number"],
+                "amount": float(r["amount"] or 0),
+                "status": r["status"],
+            }
+        )
 
-    return jsonify(rows)
+    return jsonify(result)
 
 
 @app.route("/reports/bills.csv")

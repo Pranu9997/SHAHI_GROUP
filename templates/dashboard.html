@@ -1198,14 +1198,23 @@ window.addEventListener("DOMContentLoaded", () => {
 
 });
 
-
-
+function loadTodayOrders(){
+  fetch("/today-orders")
+  .then(res => res.json())
+  .then(data => {
+    renderBillHistory(data);
+  });
+}
 
 loadTodayOrders();
+setInterval(loadTodayOrders, 5000);
+
+
 loadBillHistory();
 setInterval(loadTodayOrders, 5000);
 setInterval(loadOccupiedTables, 5000);
 setInterval(loadPendingOrders, 5000);
+setInterval(loadBillHistory, 5000);
   </script>
   
 </body>
