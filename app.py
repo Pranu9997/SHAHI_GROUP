@@ -71,10 +71,10 @@ def generate_otp(length=6):
 
 
 def send_otp_email(to_email, otp_code):
-    smtp_host = (os.getenv('smtp.gmail.com') or '').strip()
-    smtp_port = int(os.getenv('587', '587'))
-    smtp_user = (os.getenv('pranavyadav5594@gmail.com') or '').strip()
-    smtp_pass = (os.getenv('cbih lbrz uqqc yxji') or '').strip()
+    smtp_host = (os.getenv('SMTP_HOST') or '').strip()
+    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_user = (os.getenv('SMTP_USER') or '').strip()
+    smtp_pass = (os.getenv('SMTP_PASS') or '').strip()
     # Google App Password often copied with spaces every 4 chars.
     smtp_pass = smtp_pass.replace(' ', '')
     smtp_from = os.getenv('SMTP_FROM', smtp_user or '')
