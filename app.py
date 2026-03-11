@@ -1,6 +1,15 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
+    Response,
+)
 from flask_cors import CORS
 
 import os
@@ -14,16 +23,16 @@ import html
 from email.message import EmailMessage
 
 
-def load_env_file(env_path='.env'):
+def load_env_file(env_path=".env"):
     if not os.path.exists(env_path):
         return
     try:
-        with open(env_path, 'r', encoding='utf-8') as f:
+        with open(env_path, "r", encoding="utf-8") as f:
             for raw in f:
                 line = raw.strip()
-                if not line or line.startswith('#') or '=' not in line:
+                if not line or line.startswith("#") or "=" not in line:
                     continue
-                key, value = line.split('=', 1)
+                key, value = line.split("=", 1)
                 key = key.strip()
                 value = value.strip().strip('"').strip("'")
                 if key and key not in os.environ:
@@ -34,11 +43,12 @@ def load_env_file(env_path='.env'):
 
 # Load .env from project folder reliably (independent of current working dir)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_env_file(os.path.join(BASE_DIR, '.env'))
-app = Flask(__name__, template_folder='templates', static_folder='static')
+load_env_file(os.path.join(BASE_DIR, ".env"))
+app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 import psycopg2
+
 
 def get_db():
     conn = psycopg2.connect(
@@ -47,88 +57,90 @@ def get_db():
         user="postgres.kheoeudkirehzncxuqkj",
         password="Shahi@Pranav",
         port=5432,
-        sslmode="require"
+        sslmode="require",
     )
     return conn
-@app.route('/')
+
+
+@app.route("/")
 def home():
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
+
 
 # -------------------------
 # CONFIG
 # -------------------------
-app.secret_key = os.getenv('FLASK_SECRET', 'shahi_secret_key')
-
+app.secret_key = os.getenv("FLASK_SECRET", "shahi_secret_key")
 
 
 def generate_login_captcha(length=5):
     chars = string.ascii_uppercase + string.digits
-    return ''.join(random.choice(chars) for _ in range(length))
+    return "".join(random.choice(chars) for _ in range(length))
 
 
 def generate_otp(length=6):
-    return ''.join(random.choice(string.digits) for _ in range(length))
+    return "".join(random.choice(string.digits) for _ in range(length))
 
 
 def send_otp_email(to_email, otp_code):
-    smtp_host = (os.getenv('SMTP_HOST') or '').strip()
-    smtp_port = int(os.getenv('SMTP_PORT', '587'))
-    smtp_user = (os.getenv('SMTP_USER') or '').strip()
-    smtp_pass = (os.getenv('SMTP_PASS') or '').strip()
+    smtp_host = (os.getenv("SMTP_HOST") or "").strip()
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = (os.getenv("SMTP_USER") or "").strip()
+    smtp_pass = (os.getenv("SMTP_PASS") or "").strip()
     # Google App Password often copied with spaces every 4 chars.
-    smtp_pass = smtp_pass.replace(' ', '')
-    smtp_from = os.getenv('SMTP_FROM', smtp_user or '')
-    smtp_use_tls = os.getenv('SMTP_USE_TLS', 'true').lower() in ('1', 'true', 'yes')
+    smtp_pass = smtp_pass.replace(" ", "")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user or "")
+    smtp_use_tls = os.getenv("SMTP_USE_TLS", "true").lower() in ("1", "true", "yes")
 
     missing = []
     if not smtp_host:
-        missing.append('SMTP_HOST')
+        missing.append("SMTP_HOST")
     if not smtp_user:
-        missing.append('SMTP_USER')
+        missing.append("SMTP_USER")
     if not smtp_pass:
-        missing.append('SMTP_PASS')
+        missing.append("SMTP_PASS")
     if missing:
         return False, "Email service not configured. Missing: " + ", ".join(missing)
 
     msg = EmailMessage()
-    msg['Subject'] = 'Shahi Mutton Khanawal - Password Reset OTP'
-    msg['From'] = smtp_from
-    msg['To'] = to_email
+    msg["Subject"] = "Shahi Mutton Khanawal - Password Reset OTP"
+    msg["From"] = smtp_from
+    msg["To"] = to_email
     msg.set_content(
         f"Your OTP for password reset is: {otp_code}\n"
         f"This OTP will expire in 5 minutes."
     )
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-            server.ehlo()
-            if smtp_use_tls:
-                server.starttls()
-                server.ehlo()
+        with smtplib.SMTP_SSL(smtp_host, 465, timeout=20) as server:
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
         return True, None
+
     except Exception as e:
         err_text = str(e)
-        if smtp_host.lower() == 'smtp.gmail.com' and '535' in err_text:
+        if smtp_host.lower() == "smtp.gmail.com" and "535" in err_text:
             return False, (
                 "Gmail rejected login (535). Use Google App Password (16 chars), "
                 "not your normal Gmail password. Also ensure 2-Step Verification is ON."
             )
         return False, f"Failed to send OTP email: {e}"
 
+
 def users_has_email_column():
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        cur.execute("""
+        cur.execute(
+            """
         SELECT column_name
         FROM information_schema.columns
         WHERE table_name = 'users'
         AND column_name = 'email'
         AND table_schema = 'public'
-        """)
+        """
+        )
 
         row = cur.fetchone()
 
@@ -140,9 +152,10 @@ def users_has_email_column():
     except Exception:
         return False
 
-#--------------------
+
+# --------------------
 #  Menu connection
-#--------------------
+# --------------------
 def fetch_all_menu():
     conn = get_db()
     cur = conn.cursor()
@@ -152,96 +165,88 @@ def fetch_all_menu():
 
     items = []
     for r in rows:
-        items.append({
-            "id": r[0],
-            "item_name": r[1],
-            "category": r[2],
-            "price": float(r[3])
-        })
+        items.append(
+            {"id": r[0], "item_name": r[1], "category": r[2], "price": float(r[3])}
+        )
 
     cur.close()
     conn.close()
     return items
 
 
-
 # -------------------------
 # LOGIN / LOGOUT
 # -------------------------
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if 'login_captcha' not in session:
-        session['login_captcha'] = generate_login_captcha()
-    success_msg = request.args.get('success')
+    if "login_captcha" not in session:
+        session["login_captcha"] = generate_login_captcha()
+    success_msg = request.args.get("success")
 
-    if request.method == 'POST':
-        username = (request.form.get('username') or '').strip()
-        password = request.form.get('password') or ''
-        captcha_input = (request.form.get('captcha') or '').strip().upper()
-        expected_captcha = (session.get('login_captcha') or '').upper()
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
+        password = request.form.get("password") or ""
+        captcha_input = (request.form.get("captcha") or "").strip().upper()
+        expected_captcha = (session.get("login_captcha") or "").upper()
 
         if captcha_input != expected_captcha:
-            session['login_captcha'] = generate_login_captcha()
+            session["login_captcha"] = generate_login_captcha()
             return render_template(
-                'login.html',
+                "login.html",
                 error="Invalid captcha",
-                captcha_code=session['login_captcha'],
-                username=username
+                captcha_code=session["login_captcha"],
+                username=username,
             )
 
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(
             "SELECT * FROM users WHERE username=%s AND password=%s",
-            (username, password)
+            (username, password),
         )
         user = cur.fetchone()
         cur.close()
         conn.close()
 
         if user:
-            session['user'] = username
-            session.pop('login_captcha', None)
-            return redirect(url_for('dashboard'))
+            session["user"] = username
+            session.pop("login_captcha", None)
+            return redirect(url_for("dashboard"))
         else:
-            session['login_captcha'] = generate_login_captcha()
+            session["login_captcha"] = generate_login_captcha()
             return render_template(
-                'login.html',
+                "login.html",
                 error="Invalid credentials",
-                captcha_code=session['login_captcha'],
-                username=username
+                captcha_code=session["login_captcha"],
+                username=username,
             )
 
-    session['login_captcha'] = generate_login_captcha()
+    session["login_captcha"] = generate_login_captcha()
     return render_template(
-        'login.html',
-        captcha_code=session['login_captcha'],
-        success=success_msg
+        "login.html", captcha_code=session["login_captcha"], success=success_msg
     )
 
 
-@app.route('/forgot', methods=['GET', 'POST'])
+@app.route("/forgot", methods=["GET", "POST"])
 def forgot_password():
-    if request.method == 'GET':
-        return render_template('forgot.html', step='email')
+    if request.method == "GET":
+        return render_template("forgot.html", step="email")
 
-    action = request.form.get('action', 'send_otp')
+    action = request.form.get("action", "send_otp")
 
-    if action == 'send_otp':
-        email = (request.form.get('email') or '').strip().lower()
+    if action == "send_otp":
+        email = (request.form.get("email") or "").strip().lower()
         if not email:
             return render_template(
-                'forgot.html',
-                step='email',
-                error='Please enter your email address.'
+                "forgot.html", step="email", error="Please enter your email address."
             )
 
         if not users_has_email_column():
             return render_template(
-                'forgot.html',
-                step='email',
+                "forgot.html",
+                step="email",
                 email=email,
-                error="Database setup missing: 'users.email' column not found. Please add email column first."
+                error="Database setup missing: 'users.email' column not found. Please add email column first.",
             )
 
         try:
@@ -254,145 +259,128 @@ def forgot_password():
             conn.close()
         except Exception as e:
             return render_template(
-                'forgot.html',
-                step='email',
-                error=f'Unable to validate email: {e}'
+                "forgot.html", step="email", error=f"Unable to validate email: {e}"
             )
 
         if not user:
             return render_template(
-                'forgot.html',
-                step='email',
-                error='Email is not registered.'
+                "forgot.html", step="email", error="Email is not registered."
             )
 
         otp_code = generate_otp()
-        session['forgot_email'] = email
-        session['forgot_otp'] = otp_code
-        session['forgot_otp_exp'] = int(time.time()) + 300
+        session["forgot_email"] = email
+        session["forgot_otp"] = otp_code
+        session["forgot_otp_exp"] = int(time.time()) + 300
 
         ok, err = send_otp_email(email, otp_code)
         if not ok:
-            return render_template(
-                'forgot.html',
-                step='email',
-                email=email,
-                error=err
-            )
+            return render_template("forgot.html", step="email", email=email, error=err)
 
         return render_template(
-            'forgot.html',
-            step='verify',
-            email=email,
-            message='OTP sent to your email.'
+            "forgot.html", step="verify", email=email, message="OTP sent to your email."
         )
 
-    if action == 'verify_reset':
-        email = (request.form.get('email') or '').strip().lower()
-        otp_input = (request.form.get('otp') or '').strip()
-        new_password = request.form.get('new_password') or ''
-        confirm_password = request.form.get('confirm_password') or ''
+    if action == "verify_reset":
+        email = (request.form.get("email") or "").strip().lower()
+        otp_input = (request.form.get("otp") or "").strip()
+        new_password = request.form.get("new_password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
 
         if not email or not otp_input or not new_password or not confirm_password:
             return render_template(
-                'forgot.html',
-                step='verify',
+                "forgot.html",
+                step="verify",
                 email=email,
-                error='All fields are required.'
+                error="All fields are required.",
             )
 
         if new_password != confirm_password:
             return render_template(
-                'forgot.html',
-                step='verify',
+                "forgot.html",
+                step="verify",
                 email=email,
-                error='Passwords do not match.'
+                error="Passwords do not match.",
             )
 
         if not users_has_email_column():
             return render_template(
-                'forgot.html',
-                step='email',
-                error="Database setup missing: 'users.email' column not found. Please add email column first."
+                "forgot.html",
+                step="email",
+                error="Database setup missing: 'users.email' column not found. Please add email column first.",
             )
 
-        session_email = (session.get('forgot_email') or '').lower()
-        session_otp = session.get('forgot_otp')
-        session_exp = int(session.get('forgot_otp_exp') or 0)
+        session_email = (session.get("forgot_email") or "").lower()
+        session_otp = session.get("forgot_otp")
+        session_exp = int(session.get("forgot_otp_exp") or 0)
 
         if email != session_email or otp_input != session_otp:
             return render_template(
-                'forgot.html',
-                step='verify',
-                email=email,
-                error='Invalid OTP.'
+                "forgot.html", step="verify", email=email, error="Invalid OTP."
             )
 
         if int(time.time()) > session_exp:
-            session.pop('forgot_email', None)
-            session.pop('forgot_otp', None)
-            session.pop('forgot_otp_exp', None)
+            session.pop("forgot_email", None)
+            session.pop("forgot_otp", None)
+            session.pop("forgot_otp_exp", None)
             return render_template(
-                'forgot.html',
-                step='email',
-                error='OTP expired. Please request a new OTP.'
+                "forgot.html",
+                step="email",
+                error="OTP expired. Please request a new OTP.",
             )
 
         try:
-           
+
             conn = get_db()
             cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cur.execute(
-                "UPDATE users SET password=%s WHERE email=%s",
-                (new_password, email)
+                "UPDATE users SET password=%s WHERE email=%s", (new_password, email)
             )
             conn.commit()
             cur.close()
             conn.close()
         except Exception as e:
             return render_template(
-                'forgot.html',
-                step='verify',
+                "forgot.html",
+                step="verify",
                 email=email,
-                error=f'Unable to reset password: {e}'
+                error=f"Unable to reset password: {e}",
             )
 
-        session.pop('forgot_email', None)
-        session.pop('forgot_otp', None)
-        session.pop('forgot_otp_exp', None)
-        return redirect(url_for('login', success='Password reset successful. Please login.'))
+        session.pop("forgot_email", None)
+        session.pop("forgot_otp", None)
+        session.pop("forgot_otp_exp", None)
+        return redirect(
+            url_for("login", success="Password reset successful. Please login.")
+        )
 
-    return render_template(
-        'forgot.html',
-        step='email',
-        error='Invalid request.'
-    )
+    return render_template("forgot.html", step="email", error="Invalid request.")
 
 
-
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-    session.pop('user', None)   # session remove karega
-    return redirect(url_for('login'))
+    session.pop("user", None)  # session remove karega
+    return redirect(url_for("login"))
 
 
 # -------------------------
 # DASHBOARD PAGE
 # -------------------------
-@app.route('/dashboard')
+@app.route("/dashboard")
 def dashboard():
 
     # 🔐 SECURE CODE (login check)
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""
+    cur.execute(
+        """
         SELECT SUM(amount)
         FROM billing
         WHERE status = 'Paid'
-    """)
+    """
+    )
 
     result = cur.fetchone()
     cur.close()
@@ -401,23 +389,22 @@ def dashboard():
     today_revenue = result[0] if result and result[0] else 0
 
     return render_template(
-        'dashboard.html',
-        username=session.get('user'),
-        today_revenue=today_revenue
+        "dashboard.html", username=session.get("user"), today_revenue=today_revenue
     )
 
 
-@app.route('/today-orders')
-
+@app.route("/today-orders")
 def today_orders():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute("""
+    cur.execute(
+        """
         SELECT bill_no, table_number, amount, status
         FROM billing
         ORDER BY id DESC
-    """)
+    """
+    )
 
     data = cur.fetchall()
     cur.close()
@@ -428,7 +415,7 @@ def today_orders():
             "bill_no": row["bill_no"],
             "table_number": row["table_number"],
             "amount": float(row["amount"] or 0),
-            "status": row["status"]
+            "status": row["status"],
         }
         for row in data
     ]
@@ -436,30 +423,32 @@ def today_orders():
     return jsonify(rows)
 
 
-@app.route('/reports/bills.csv')
+@app.route("/reports/bills.csv")
 def export_bills_csv():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""
+    cur.execute(
+        """
         SELECT id, bill_no, table_number, amount
         FROM billing
         ORDER BY id ASC
-    """)
+    """
+    )
     rows = cur.fetchall()
     cur.close()
     conn.close()
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Bill No', 'Bill Invoice', 'Table Number', 'Bill Amount'])
+    writer.writerow(["Bill No", "Bill Invoice", "Table Number", "Bill Amount"])
 
     for row in rows:
-        bill_id = row.get('id') or ''
-        bill_no = (row.get('bill_no') or '').strip()
-        table_no = row.get('table_number') or ''
-        amount = row.get('amount') or 0
+        bill_id = row.get("id") or ""
+        bill_no = (row.get("bill_no") or "").strip()
+        table_no = row.get("table_number") or ""
+        amount = row.get("amount") or 0
         try:
             amount = f"{float(amount):.2f}"
         except Exception:
@@ -472,24 +461,26 @@ def export_bills_csv():
 
     return Response(
         csv_data,
-        mimetype='text/csv; charset=utf-8',
+        mimetype="text/csv; charset=utf-8",
         headers={
-            'Content-Disposition': 'attachment; filename=billing_report_till_date.csv'
-        }
+            "Content-Disposition": "attachment; filename=billing_report_till_date.csv"
+        },
     )
 
 
-@app.route('/reports/bills/pdf')
+@app.route("/reports/bills/pdf")
 def export_bills_pdf():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""
+    cur.execute(
+        """
         SELECT id, bill_no, table_number, amount
         FROM billing
         ORDER BY id ASC
-    """)
+    """
+    )
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -497,11 +488,11 @@ def export_bills_pdf():
     total_amount = 0.0
     body_rows = []
     for row in rows:
-        bill_id = html.escape(str(row.get('id') or ''))
-        bill_no = html.escape(str(row.get('bill_no') or '').strip())
-        table_no = html.escape(str(row.get('table_number') or ''))
+        bill_id = html.escape(str(row.get("id") or ""))
+        bill_no = html.escape(str(row.get("bill_no") or "").strip())
+        table_no = html.escape(str(row.get("table_number") or ""))
         try:
-            amount_num = float(row.get('amount') or 0)
+            amount_num = float(row.get("amount") or 0)
         except Exception:
             amount_num = 0.0
         total_amount += amount_num
@@ -559,26 +550,29 @@ def export_bills_pdf():
 </body>
 </html>"""
 
-    return Response(html_doc, mimetype='text/html; charset=utf-8')
-#-----------------------------
+    return Response(html_doc, mimetype="text/html; charset=utf-8")
+
+
+# -----------------------------
 @app.route("/billing")
 def billing():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    if "user" not in session:
+        return redirect(url_for("login"))
 
     return render_template("billing.html")
 
 
-#------------------------------
-
+# ------------------------------
 
 
 @app.route("/waiter")
 def waiter():
     return render_template("waiter.html")
 
+
 import time
 from flask import request, jsonify
+
 
 @app.route("/api/waiter/order", methods=["POST"])
 def waiter_order():
@@ -592,24 +586,23 @@ def waiter_order():
 
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""
+    cur.execute(
+        """
         INSERT INTO billing
         (bill_no, table_number, items, amount, status)
         VALUES (%s,%s,%s,%s,%s)
-    """, (bill_no, table, items, amount, "Pending"))
+    """,
+        (bill_no, table, items, amount, "Pending"),
+    )
 
     # Waiter order aate hi table ko on-dine mark karo (upsert)
     cur.execute("SELECT 1 FROM tables WHERE table_no = %s", (table,))
     exists = cur.fetchone()
     if exists:
-        cur.execute(
-            "UPDATE tables SET status=%s WHERE table_no=%s",
-            ("ondine", table)
-        )
+        cur.execute("UPDATE tables SET status=%s WHERE table_no=%s", ("ondine", table))
     else:
         cur.execute(
-            "INSERT INTO tables (table_no, status) VALUES (%s, %s)",
-            (table, "ondine")
+            "INSERT INTO tables (table_no, status) VALUES (%s, %s)", (table, "ondine")
         )
 
     conn.commit()
@@ -617,71 +610,83 @@ def waiter_order():
     conn.close()
 
     # Dashboard ke format me response
-    return jsonify({
-        "bill_no": bill_no,
-        "table_number": table,
-        "amount": amount,
-        "status": "Pending"
-    })
-
-
+    return jsonify(
+        {
+            "bill_no": bill_no,
+            "table_number": table,
+            "amount": amount,
+            "status": "Pending",
+        }
+    )
 
     # IMPORTANT: dashboard format return karo
-    return jsonify({
-        "bill_no": bill_no,
-        "table_number": table,
-        "amount": amount,
-        "status": "Pending"
-    })
+    return jsonify(
+        {
+            "bill_no": bill_no,
+            "table_number": table,
+            "amount": amount,
+            "status": "Pending",
+        }
+    )
+
 
 # -------------------------
 # MENU PAGE (OPTIONAL)
 # -------------------------
-@app.route('/menu')
+@app.route("/menu")
 def menu_page():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template('menu.html', items=[])
+    if "user" not in session:
+        return redirect(url_for("login"))
+    return render_template("menu.html", items=[])
 
 
 # -------------------------
 # ✅ API: MENU FETCH (FOR BILLING)
 # -------------------------
-@app.route('/api/items', methods=['GET'])
+@app.route("/api/items", methods=["GET"])
 def api_items():
     try:
         items = fetch_all_menu()
         return jsonify(items), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
 
 # -------------------------
 # ✅ ✅ ✅ API: GET PENDING BILL BY TABLE
-@app.route('/api/billing/pending/<int:table_no>', methods=['GET'])
+@app.route("/api/billing/pending/<int:table_no>", methods=["GET"])
 def get_pending_bill(table_no):
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        cur.execute("""
+        cur.execute(
+            """
             SELECT bill_no, items, status
             FROM billing
             WHERE table_number=%s
               AND LOWER(status) = 'pending'
             ORDER BY id DESC
             LIMIT 1
-        """, (table_no,))
+        """,
+            (table_no,),
+        )
 
         row = cur.fetchone()
         cur.close()
         conn.close()
 
         if row:
-            return jsonify({
-                "bill_no": row["bill_no"],
-                "items": row["items"],
-                "status": row["status"]
-            }), 200
+            return (
+                jsonify(
+                    {
+                        "bill_no": row["bill_no"],
+                        "items": row["items"],
+                        "status": row["status"],
+                    }
+                ),
+                200,
+            )
 
         return jsonify({"items": None}), 200
 
@@ -689,11 +694,10 @@ def get_pending_bill(table_no):
         return jsonify({"error": str(e)}), 500
 
 
-
 # -------------------------
 # ✅ PAY BILL + TABLE AUTO FREE
 # -------------------------
-@app.route('/api/billing/pay/<bill_no>', methods=['POST'])
+@app.route("/api/billing/pay/<bill_no>", methods=["POST"])
 def pay_bill(bill_no):
     try:
         conn = get_db()
@@ -702,7 +706,7 @@ def pay_bill(bill_no):
         # bill ka table number nikaalo
         cur.execute(
             "SELECT table_number FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1",
-            (bill_no,)
+            (bill_no,),
         )
         row = cur.fetchone()
 
@@ -712,15 +716,11 @@ def pay_bill(bill_no):
         table_number = row["table_number"]
 
         # billing status = Paid
-        cur.execute(
-            "UPDATE billing SET status='Paid' WHERE bill_no=%s",
-            (bill_no,)
-        )
+        cur.execute("UPDATE billing SET status='Paid' WHERE bill_no=%s", (bill_no,))
 
         # ⭐ table auto free
         cur.execute(
-            "UPDATE tables SET status='Free' WHERE table_no=%s",
-            (table_number,)
+            "UPDATE tables SET status='Free' WHERE table_no=%s", (table_number,)
         )
 
         conn.commit()
@@ -736,45 +736,45 @@ def pay_bill(bill_no):
 # -------------------------
 # ✅ API: MENU ADD
 # -------------------------
-@app.route('/api/menu/add', methods=['POST'])
+@app.route("/api/menu/add", methods=["POST"])
 def api_menu_add():
     try:
         data = request.get_json(force=True)
 
-        name = data.get('item_name')
-        category = data.get('category', '')
-        price = data.get('price', 0)
+        name = data.get("item_name")
+        category = data.get("category", "")
+        price = data.get("price", 0)
 
         if not name or price is None:
-            return jsonify({'error': 'Missing item name or price'}), 400
+            return jsonify({"error": "Missing item name or price"}), 400
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(
             "INSERT INTO menu (item_name, category, price) VALUES (%s, %s, %s)",
-            (name, category, float(price))
+            (name, category, float(price)),
         )
         conn.commit()
         cur.close()
         conn.close()
 
         items = fetch_all_menu()
-        return jsonify({'items': items}), 200
+        return jsonify({"items": items}), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 # -------------------------
 # ✅ API: MENU DELETE
 # -------------------------
-@app.route('/api/menu/delete', methods=['POST'])
+@app.route("/api/menu/delete", methods=["POST"])
 def api_menu_delete():
     try:
         data = request.get_json(force=True)
-        item_id = data.get('id')
+        item_id = data.get("id")
 
         if not item_id:
-            return jsonify({'error': 'Missing id'}), 400
+            return jsonify({"error": "Missing id"}), 400
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("DELETE FROM menu WHERE id = %s", (item_id,))
@@ -783,30 +783,31 @@ def api_menu_delete():
         conn.close()
 
         items = fetch_all_menu()
-        return jsonify({'items': items}), 200
+        return jsonify({"items": items}), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
 
 # -------------------------
 # ✅ ✅ ✅ API: BILLING / POS SAVE
 # -------------------------
-@app.route('/api/billing', methods=['POST'])
+@app.route("/api/billing", methods=["POST"])
 def api_billing():
     try:
         data = request.get_json(force=True)
 
-        bill_no = data.get('bill_no') or f"INV{int(time.time())}"
-        table_number = data.get('table_number')
-        items_text = data.get('items')
-        amount = float(data.get('amount', 0) or 0)
-        status = data.get('status', 'Pending')
+        bill_no = data.get("bill_no") or f"INV{int(time.time())}"
+        table_number = data.get("table_number")
+        items_text = data.get("items")
+        amount = float(data.get("amount", 0) or 0)
+        status = data.get("status", "Pending")
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cur.execute(
             "SELECT id FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1",
-            (bill_no,)
+            (bill_no,),
         )
         existing = cur.fetchone()
 
@@ -817,40 +818,41 @@ def api_billing():
                 SET table_number=%s, items=%s, amount=%s, status=%s
                 WHERE id=%s
                 """,
-                (table_number, items_text, amount, status, existing["id"])
+                (table_number, items_text, amount, status, existing["id"]),
             )
         else:
             cur.execute(
                 "INSERT INTO billing (bill_no, table_number, items, amount, status) VALUES (%s, %s, %s, %s, %s)",
-                (bill_no, table_number, items_text, amount, status)
+                (bill_no, table_number, items_text, amount, status),
             )
         conn.commit()
 
-        cur.execute("SELECT * FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1", (bill_no,))
+        cur.execute(
+            "SELECT * FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1",
+            (bill_no,),
+        )
         saved = cur.fetchone()
         cur.close()
         conn.close()
 
-        if saved and saved.get('amount') is not None:
+        if saved and saved.get("amount") is not None:
             try:
-                saved['amount'] = float(saved['amount'])
+                saved["amount"] = float(saved["amount"])
             except:
                 pass
 
-        return jsonify({'ok': True, 'data': saved}), 200
+        return jsonify({"ok": True, "data": saved}), 200
 
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
-   
-   
-    fetch('/api/billing/pay/' + bill_no, {
-    method: "POST"
-});
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    fetch("/api/billing/pay/" + bill_no, {method: "POST"})
+
 
 # -------------------------
 # ✅ API: TABLE STATUS
 # -------------------------
-@app.route('/api/tables', methods=['GET'])
+@app.route("/api/tables", methods=["GET"])
 def api_tables():
     try:
         conn = get_db()
@@ -861,10 +863,7 @@ def api_tables():
 
         tables = []
         for r in rows:
-            tables.append({
-                "table_no": r[0],
-                "status": r[1]
-            })
+            tables.append({"table_no": r[0], "status": r[1]})
 
         cur.close()
         conn.close()
@@ -872,17 +871,17 @@ def api_tables():
         return jsonify(tables), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/api/tables/<int:table_no>', methods=['POST'])
+
+@app.route("/api/tables/<int:table_no>", methods=["POST"])
 def api_tables_update(table_no):
     try:
         data = request.get_json(force=True)
-        status = data.get('status')
+        status = data.get("status")
 
         if status is None:
-            return jsonify({'error': 'Missing status'}), 400
+            return jsonify({"error": "Missing status"}), 400
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("SELECT 1 FROM tables WHERE table_no = %s", (table_no,))
@@ -890,30 +889,30 @@ def api_tables_update(table_no):
 
         if exists:
             cur.execute(
-                "UPDATE tables SET status = %s WHERE table_no = %s",
-                (status, table_no)
+                "UPDATE tables SET status = %s WHERE table_no = %s", (status, table_no)
             )
         else:
             cur.execute(
                 "INSERT INTO tables (table_no, status) VALUES (%s, %s)",
-                (table_no, status)
+                (table_no, status),
             )
 
         conn.commit()
         cur.close()
         conn.close()
-        return jsonify({'ok': True}), 200
+        return jsonify({"ok": True}), 200
 
     except Exception as e:
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 
 # -------------------------
 # HEALTH CHECK
 # -------------------------
-@app.route('/health')
+@app.route("/health")
 def health():
-    return jsonify({'status': 'ok'}), 200
+    return jsonify({"status": "ok"}), 200
+
 
 # -------------------------
 # RUN SERVER
@@ -924,4 +923,3 @@ port = int(os.environ.get("PORT", 5000))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port, debug=True)
-
