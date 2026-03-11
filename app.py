@@ -751,7 +751,7 @@ def api_menu_add():
 # -------------------------
 # ✅ API: MENU DELETE
 # -------------------------
-@app.route("/api/menu/delete", methods=["POST"])
+@app.route("/api/menu/delete", methods=["GET", "POST"])
 def api_menu_delete():
     try:
         data = request.get_json(force=True)
