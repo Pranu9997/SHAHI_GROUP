@@ -776,7 +776,7 @@ def api_menu_delete():
 # -------------------------
 # ✅ ✅ ✅ API: BILLING / POS SAVE
 # -------------------------
-@app.route("/api/billing", methods=["POST"])
+@app.route("/api/billing", methods=["GET"])
 def api_billing():
     try:
         data = request.get_json(force=True)
