@@ -655,9 +655,36 @@ async function addItemToServer(payload){
   catch(e){ const arr=JSON.parse(localStorage.getItem(LS.ITEMS)||'[]'); const id=arr.length?Math.max(...arr.map(x=>x.id))+1:1; arr.unshift({id,item_name:payload.item_name,category:payload.category,price:parseFloat(payload.price)}); localStorage.setItem(LS.ITEMS, JSON.stringify(arr)); return arr; }
 }
 async function submitBillToServer(payload){
-  try{ const r=await tryFetch(API.billing,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)},4500); const json=await r.json(); saveBillLocal(json||payload); return {ok:true, data:json||payload}; } catch(e){ saveBillLocal(payload); return {ok:false, err:e}; }
+
+  try {
+
+    const response = await fetch("/api/billing", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    return {
+      ok: true,
+      data: data
+    };
+
+  } catch (error) {
+
+    console.error("Billing error:", error);
+
+    return {
+      ok: false,
+      error: error
+    };
+  }
 }
-function saveBillLocal(bill){ const bills=JSON.parse(localStorage.getItem(LS.BILLS)||'[]'); bills.unshift({...bill, created_at:new Date().toISOString()}); localStorage.setItem(LS.BILLS, JSON.stringify(bills.slice(0,20))); }
+
+//function saveBillLocal(bill){ const bills=JSON.parse(localStorage.getItem(LS.BILLS)||'[]'); bills.unshift({...bill, created_at:new Date().toISOString()}); localStorage.setItem(LS.BILLS, JSON.stringify(bills.slice(0,20))); }
 
 async function getTables(){
   try{ const r=await tryFetch(API.tables); const data=await r.json(); localStorage.setItem(LS.TABLES, JSON.stringify(data)); return data; }

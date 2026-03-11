@@ -792,6 +792,7 @@ def api_billing():
             """
             SELECT bill_no, table_number, amount, status
             FROM billing
+            WHERE LOWER(status) = 'paid'
             ORDER BY id DESC
         """
         )
