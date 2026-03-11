@@ -112,11 +112,14 @@ def send_otp_email(to_email, otp_code):
     )
 
     try:
-        with smtplib.SMTP_SSL(smtp_host, 465, timeout=20) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+            server.ehlo()
+            if smtp_use_tls:
+                server.starttls()
+                server.ehlo()
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
         return True, None
-
     except Exception as e:
         err_text = str(e)
         if smtp_host.lower() == "smtp.gmail.com" and "535" in err_text:
