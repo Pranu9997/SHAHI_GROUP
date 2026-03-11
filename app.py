@@ -101,6 +101,7 @@ def send_otp_email(to_email, otp_code):
 
     try:
         with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+            server.ehlo()
             if smtp_use_tls:
                 server.starttls()
                 server.ehlo()
