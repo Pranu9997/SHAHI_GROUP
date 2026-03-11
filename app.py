@@ -83,21 +83,25 @@ def generate_otp(length=6):
     return "".join(random.choice(string.digits) for _ in range(length))
 
 
-import resend
 import os
+import resend
 
 
 def send_otp_email(to_email, otp_code):
 
-    resend.api_key = os.getenv("re_M3iedYnw_NPDqUEt4oUrYDocvj68kLyVd")
-
     try:
+        resend.api_key = os.getenv("re_M3iedYnw_NPDqUEt4oUrYDocvj68kLyVd")
+
         resend.Emails.send(
             {
                 "from": "onboarding@resend.dev",
                 "to": to_email,
                 "subject": "Shahi Mutton Khanawal - Password Reset OTP",
-                "html": f"<h2>Your OTP is {otp_code}</h2><p>This OTP will expire in 5 minutes.</p>",
+                "html": f"""
+            <h2>Password Reset OTP</h2>
+            <p>Your OTP is: <strong>{otp_code}</strong></p>
+            <p>This OTP will expire in 5 minutes.</p>
+            """,
             }
         )
 
