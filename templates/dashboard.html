@@ -1198,6 +1198,38 @@ window.addEventListener("DOMContentLoaded", () => {
 
 });
 
+
+async function loadBills(){
+
+  const res = await fetch("/today-orders");
+  const data = await res.json();
+
+  const tableBody = document.getElementById("billHistoryBody");
+
+  tableBody.innerHTML = "";
+
+  data.forEach(bill => {
+
+    tableBody.innerHTML += `
+      <tr>
+        <td>${bill.bill_no}</td>
+        <td>${bill.table_number}</td>
+        <td>₹ ${bill.amount}</td>
+        <td>${bill.status}</td>
+      </tr>
+    `;
+
+  });
+
+}
+
+loadBills();
+
+// auto refresh every 5 seconds
+setInterval(loadBills,5000);
+
+
+
 setInterval(loadTodayOrders, 5000);
 setInterval(loadOccupiedTables, 5000);
 setInterval(loadPendingOrders, 5000);
