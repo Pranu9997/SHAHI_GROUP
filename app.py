@@ -776,61 +776,69 @@ def api_menu_delete():
 # -------------------------
 # ✅ ✅ ✅ API: BILLING / POS SAVE
 # -------------------------
-@app.route("/api/billing", methods=["GET"])
+@app.route("/api/billing", methods=["GET", "POST"])
 def api_billing():
-    try:
-        data = request.get_json(force=True)
 
-        bill_no = data.get("bill_no") or f"INV{int(time.time())}"
-        table_number = data.get("table_number")
-        items_text = data.get("items")
-        amount = float(data.get("amount", 0) or 0)
-        status = data.get("status", "Pending")
+    # -------- GET → Bill History ke liye --------
+    if request.method == "GET":
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cur.execute(
-            "SELECT id FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1",
-            (bill_no,),
+            """
+            SELECT bill_no, table_number, amount, status
+            FROM billing
+            ORDER BY id DESC
+        """
         )
-        existing = cur.fetchone()
 
-        if existing:
-            cur.execute(
-                """
-                UPDATE billing
-                SET table_number=%s, items=%s, amount=%s, status=%s
-                WHERE id=%s
-                """,
-                (table_number, items_text, amount, status, existing["id"]),
-            )
-        else:
-            cur.execute(
-                "INSERT INTO billing (bill_no, table_number, items, amount, status) VALUES (%s, %s, %s, %s, %s)",
-                (bill_no, table_number, items_text, amount, status),
-            )
-        conn.commit()
-
-        cur.execute(
-            "SELECT * FROM billing WHERE bill_no=%s ORDER BY id DESC LIMIT 1",
-            (bill_no,),
-        )
-        saved = cur.fetchone()
+        rows = cur.fetchall()
         cur.close()
         conn.close()
 
-        if saved and saved.get("amount") is not None:
-            try:
-                saved["amount"] = float(saved["amount"])
-            except:
-                pass
+        result = []
+        for r in rows:
+            result.append(
+                {
+                    "bill_no": r["bill_no"],
+                    "table_number": r["table_number"],
+                    "amount": float(r["amount"] or 0),
+                    "status": r["status"],
+                }
+            )
 
-        return jsonify({"ok": True, "data": saved}), 200
+        return jsonify(result)
 
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+    # -------- POST → Bill Save ke liye --------
+    if request.method == "POST":
+        try:
+            data = request.get_json(force=True)
 
-    fetch("/api/billing/pay/" + bill_no, {method: "POST"})
+            bill_no = data.get("bill_no") or f"INV{int(time.time())}"
+            table_number = data.get("table_number")
+            items_text = data.get("items")
+            amount = float(data.get("amount", 0) or 0)
+            status = data.get("status", "Pending")
+
+            conn = get_db()
+            cur = conn.cursor()
+
+            cur.execute(
+                """
+                INSERT INTO billing (bill_no, table_number, items, amount, status)
+                VALUES (%s, %s, %s, %s, %s)
+            """,
+                (bill_no, table_number, items_text, amount, status),
+            )
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            return jsonify({"ok": True})
+
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)})
 
 
 # -------------------------
