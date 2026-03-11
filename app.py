@@ -90,7 +90,7 @@ import resend
 def send_otp_email(to_email, otp_code):
 
     try:
-        resend.api_key = re_M3iedYnw_NPDqUEt4oUrYDocvj68kLyVd
+        resend.api_key = "re_M3iedYnw_NPDqUEt4oUrYDocvj68kLyVd"
 
         resend.Emails.send(
             {
