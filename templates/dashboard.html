@@ -1008,7 +1008,9 @@ function renderBillHistory(rows) {
     const tbody = document.getElementById("billHistoryBody");
     if (!tbody) return;
 
-    const history = Array.isArray(rows) ? rows.slice(0, 20) : [];
+    const history = Array.isArray(rows)
+        ? rows.filter(r => (r.status || "").toString().toLowerCase() === "paid").slice(0, 20)
+        : [];
     if (!history.length) {
         tbody.innerHTML = '<tr><td colspan="4" class="empty-history">No bill history found</td></tr>';
         return;
