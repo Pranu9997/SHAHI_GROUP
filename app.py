@@ -1,5 +1,6 @@
 import psycopg2
 import psycopg2.extras
+
 from flask import (
     Flask,
     render_template,
@@ -82,52 +83,28 @@ def generate_otp(length=6):
     return "".join(random.choice(string.digits) for _ in range(length))
 
 
+import resend
+import os
+
+
 def send_otp_email(to_email, otp_code):
-    smtp_host = (os.getenv("SMTP_HOST") or "").strip()
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = (os.getenv("SMTP_USER") or "").strip()
-    smtp_pass = (os.getenv("SMTP_PASS") or "").strip()
-    # Google App Password often copied with spaces every 4 chars.
-    smtp_pass = smtp_pass.replace(" ", "")
-    smtp_from = os.getenv("SMTP_FROM", smtp_user or "")
-    smtp_use_tls = os.getenv("SMTP_USE_TLS", "true").lower() in ("1", "true", "yes")
 
-    missing = []
-    if not smtp_host:
-        missing.append("SMTP_HOST")
-    if not smtp_user:
-        missing.append("SMTP_USER")
-    if not smtp_pass:
-        missing.append("SMTP_PASS")
-    if missing:
-        return False, "Email service not configured. Missing: " + ", ".join(missing)
-
-    msg = EmailMessage()
-    msg["Subject"] = "Shahi Mutton Khanawal - Password Reset OTP"
-    msg["From"] = smtp_from
-    msg["To"] = to_email
-    msg.set_content(
-        f"Your OTP for password reset is: {otp_code}\n"
-        f"This OTP will expire in 5 minutes."
-    )
+    resend.api_key = os.getenv("re_M3iedYnw_NPDqUEt4oUrYDocvj68kLyVd")
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
-            server.ehlo()
-            if smtp_use_tls:
-                server.starttls()
-                server.ehlo()
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
+        resend.Emails.send(
+            {
+                "from": "onboarding@resend.dev",
+                "to": to_email,
+                "subject": "Shahi Mutton Khanawal - Password Reset OTP",
+                "html": f"<h2>Your OTP is {otp_code}</h2><p>This OTP will expire in 5 minutes.</p>",
+            }
+        )
+
         return True, None
+
     except Exception as e:
-        err_text = str(e)
-        if smtp_host.lower() == "smtp.gmail.com" and "535" in err_text:
-            return False, (
-                "Gmail rejected login (535). Use Google App Password (16 chars), "
-                "not your normal Gmail password. Also ensure 2-Step Verification is ON."
-            )
-        return False, f"Failed to send OTP email: {e}"
+        return False, str(e)
 
 
 def users_has_email_column():
