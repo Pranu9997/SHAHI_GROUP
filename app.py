@@ -829,13 +829,53 @@ def api_billing():
             conn = get_db()
             cur = conn.cursor()
 
-            cur.execute(
-                """
-                INSERT INTO billing (bill_no, table_number, items, amount, status)
-                VALUES (%s, %s, %s, %s, %s)
-            """,
-                (bill_no, table_number, items_text, amount, status),
-            )
+            status_norm = str(status or "Pending").strip().lower()
+
+            if status_norm == "paid":
+                # Agar pending bill hai to usi row ko paid mark karo (double row avoid)
+                cur.execute(
+                    """
+                    SELECT id
+                    FROM billing
+                    WHERE bill_no = %s AND LOWER(status) = 'pending'
+                    ORDER BY id DESC
+                    LIMIT 1
+                """,
+                    (bill_no,),
+                )
+                pending_row = cur.fetchone()
+                if pending_row:
+                    cur.execute(
+                        """
+                        UPDATE billing
+                        SET items = %s, amount = %s, status = 'Paid'
+                        WHERE id = %s
+                    """,
+                        (items_text, amount, pending_row[0]),
+                    )
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO billing (bill_no, table_number, items, amount, status)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """,
+                        (bill_no, table_number, items_text, amount, status),
+                    )
+
+                # Table ko free/available karo
+                if table_number:
+                    cur.execute(
+                        "UPDATE tables SET status = %s WHERE table_no = %s",
+                        ("available", table_number),
+                    )
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO billing (bill_no, table_number, items, amount, status)
+                    VALUES (%s, %s, %s, %s, %s)
+                """,
+                    (bill_no, table_number, items_text, amount, status),
+                )
 
             conn.commit()
             cur.close()
