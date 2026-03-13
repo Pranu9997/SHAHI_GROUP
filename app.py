@@ -363,6 +363,7 @@ def dashboard():
         SELECT SUM(amount)
         FROM billing
         WHERE status = 'Paid'
+          AND DATE(created_at) = CURRENT_DATE
     """
     )
 
