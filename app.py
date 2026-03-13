@@ -859,9 +859,38 @@ def api_tables():
         cur.execute("SELECT table_no, status FROM tables ORDER BY table_no ASC")
         rows = cur.fetchall()
 
+        # Pending bills se table status ko override karo (available -> reserved)
+        cur.execute(
+            """
+            SELECT DISTINCT table_number
+            FROM billing
+            WHERE LOWER(status) = 'pending'
+        """
+        )
+        pending_rows = cur.fetchall()
+        pending_tables = {r[0] for r in pending_rows if r and r[0] is not None}
+
         tables = []
+        seen = set()
         for r in rows:
-            tables.append({"table_no": r[0], "status": r[1]})
+            table_no = r[0]
+            status_raw = r[1] if r[1] is not None else "available"
+            status = str(status_raw).strip().lower()
+            if status in ("free", "available", ""):
+                status = "available"
+            elif status not in ("reserved", "ondine"):
+                status = status  # keep as-is (lower)
+
+            if table_no in pending_tables and status == "available":
+                status = "reserved"
+
+            tables.append({"table_no": table_no, "status": status})
+            seen.add(table_no)
+
+        # Agar pending table list me nahi hai, to add kar do as reserved
+        for tno in pending_tables:
+            if tno not in seen:
+                tables.append({"table_no": tno, "status": "reserved"})
 
         cur.close()
         conn.close()
