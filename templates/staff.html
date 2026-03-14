@@ -255,6 +255,7 @@
           <input id="staffMonthly" type="number" placeholder="e.g. 15000" />
         </div>
       </div>
+      <!--
 
       <div class="form-row">
         <div>
@@ -278,6 +279,7 @@
         </div>
       </div>
 
+      -->
       <button class="btn" id="saveStaff">Save Staff</button>
       <div id="formMsg" class="muted" style="margin-top:8px;font-size:12px"></div>
     </div>
@@ -397,8 +399,7 @@
       const mobile = document.getElementById('staffMobile').value.trim();
       const role = document.getElementById('staffRole').value.trim();
       const monthly = document.getElementById('staffMonthly').value.trim();
-      const salary = document.getElementById('staffSalary').value.trim();
-      const days = document.getElementById('staffDays').value.trim();
+      const salary = monthly;
 
       if(!name || !mobile || !role || !monthly || !salary){
         document.getElementById('formMsg').textContent = 'Please fill all required fields.';
@@ -414,7 +415,7 @@
           mobile: mobile,
           role: role,
           salary: salary,
-          days_worked: days || 0
+          days_worked: 0
         })
       });
 
@@ -423,40 +424,10 @@
       document.getElementById('staffMobile').value = '';
       document.getElementById('staffRole').value = '';
       document.getElementById('staffMonthly').value = '';
-      document.getElementById('staffSalary').value = '';
-      document.getElementById('staffMonth').value = '';
-      document.getElementById('staffDays').value = '';
 
       setTimeout(()=>{ document.getElementById('formMsg').textContent = ''; }, 1200);
       await loadStaff();
     });
-
-    function daysInMonth(ym){
-      if(!ym) return 30;
-      const parts = ym.split('-');
-      if(parts.length !== 2) return 30;
-      const y = Number(parts[0]);
-      const m = Number(parts[1]);
-      if(!y || !m) return 30;
-      return new Date(y, m, 0).getDate();
-    }
-
-    function recalcSalary(){
-      const monthly = Number(document.getElementById('staffMonthly').value || 0);
-      const ym = document.getElementById('staffMonth').value;
-      const present = Number(document.getElementById('staffDays').value || 0);
-      const totalDays = daysInMonth(ym);
-      if(monthly <= 0 || totalDays <= 0 || present <= 0){
-        document.getElementById('staffSalary').value = '';
-        return;
-      }
-      const salary = Math.round((monthly / totalDays) * present);
-      document.getElementById('staffSalary').value = salary;
-    }
-
-    document.getElementById('staffMonthly').addEventListener('input', recalcSalary);
-    document.getElementById('staffMonth').addEventListener('change', recalcSalary);
-    document.getElementById('staffDays').addEventListener('input', recalcSalary);
 
     loadStaff();
   </script>
