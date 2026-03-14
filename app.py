@@ -866,6 +866,17 @@ def api_billing():
                     """,
                         (items_text, amount, pending_row[0]),
                     )
+                if table_number:
+                    # Ensure no pending rows remain for this table
+                    cur.execute(
+                        """
+                        UPDATE billing
+                        SET status = 'Paid'
+                        WHERE table_number = %s
+                          AND LOWER(status) = 'pending'
+                    """,
+                        (table_number,),
+                    )
                 else:
                     cur.execute(
                         """
