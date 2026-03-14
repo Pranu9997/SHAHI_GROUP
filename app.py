@@ -844,6 +844,19 @@ def api_billing():
                     (bill_no,),
                 )
                 pending_row = cur.fetchone()
+                if not pending_row and table_number:
+                    # Fallback: bill_no mismatch ho to latest pending row by table update karo
+                    cur.execute(
+                        """
+                        SELECT id
+                        FROM billing
+                        WHERE table_number = %s AND LOWER(status) = 'pending'
+                        ORDER BY id DESC
+                        LIMIT 1
+                    """,
+                        (table_number,),
+                    )
+                    pending_row = cur.fetchone()
                 if pending_row:
                     cur.execute(
                         """
