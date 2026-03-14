@@ -998,6 +998,77 @@ def api_tables_update(table_no):
 
 
 # -------------------------
+# STAFF MANAGEMENT (SIMPLE)
+# -------------------------
+@app.route("/add_staff", methods=["POST"])
+def add_staff():
+    try:
+        data = request.get_json(force=True)
+        name = (data.get("name") or "").strip()
+        mobile = (data.get("mobile") or "").strip()
+        role = (data.get("role") or "").strip()
+        salary = data.get("salary")
+
+        if not name or not mobile or not role or salary is None:
+            return jsonify({"ok": False, "error": "Missing required fields"}), 400
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO staff (name, mobile, role, salary) VALUES (%s, %s, %s, %s)",
+            (name, mobile, role, int(salary)),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"ok": True, "message": "Staff added successfully"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/staff", methods=["GET"])
+def staff_list():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT id, name, mobile, role, salary FROM staff ORDER BY id DESC")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        result = []
+        for r in rows:
+            result.append(
+                {
+                    "id": r["id"],
+                    "name": r["name"],
+                    "mobile": r["mobile"],
+                    "role": r["role"],
+                    "salary": int(r["salary"]) if r["salary"] is not None else 0,
+                }
+            )
+
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/delete_staff/<int:staff_id>", methods=["DELETE"])
+def delete_staff(staff_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM staff WHERE id = %s", (staff_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"ok": True, "message": "Staff deleted"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# -------------------------
 # HEALTH CHECK
 # -------------------------
 @app.route("/health")
