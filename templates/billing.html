@@ -816,16 +816,25 @@ function isGstApplied(){
 }
 
 async function addItemToBill(id, name, price){
-  bill.items.push({
-    id: id,
-    name: name,
-    price: parseFloat(price)
-  });
+  const wasEmpty = bill.items.length === 0;
+  const existing = bill.items.find(it => String(it.id) === String(id));
+  if(existing){
+    existing.qty = (existing.qty || 1) + 1;
+  }else{
+    bill.items.push({
+      id: id,
+      name: name,
+      price: parseFloat(price),
+      qty: 1
+    });
+  }
 
   // ✅ AUTO TABLE STATUS = ONDINE (order start hote hi)
-  const tableNo = document.getElementById("bill_table").value;
- await updateTableServer(tableNo, "ondine");
-renderTables();   // 👈 UI instantly update
+  if(wasEmpty){
+    const tableNo = document.getElementById("bill_table").value;
+    await updateTableServer(tableNo, "ondine");
+    renderTables();
+  }
 
 
   renderBill();
@@ -840,6 +849,11 @@ function removeItem(index){
 function clearBill(){
   bill.bill_no = null;
   bill.items = [];
+  const tableNo = document.getElementById("bill_table").value;
+  if(tableNo){
+    updateTableServer(tableNo, "available");
+    renderTables();
+  }
   renderBill();
 }
 
@@ -1219,6 +1233,8 @@ async function loadPendingBillFromServer(tableNo){
       console.log("No pending items found");
       document.getElementById("bill_status").value = "Pending";
       syncBillStatusStyle();
+      await updateTableServer(tableNo, "available");
+      renderTables();
       renderBill();
       return;
     }
@@ -1233,7 +1249,8 @@ async function loadPendingBillFromServer(tableNo){
       bill.items.push({
         id: it.id,
         name: it.name,
-        price: parseFloat(it.price)
+        price: parseFloat(it.price),
+        qty: Number(it.qty || 1)
       });
     });
 
