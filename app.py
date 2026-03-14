@@ -1009,6 +1009,7 @@ def add_staff():
         role = (data.get("role") or "").strip()
         salary = data.get("salary")
         days_worked = data.get("days_worked")
+        status = (data.get("status") or "offline").strip().lower()
 
         if not name or not mobile or not role or salary is None:
             return jsonify({"ok": False, "error": "Missing required fields"}), 400
@@ -1016,8 +1017,8 @@ def add_staff():
         conn = get_db()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO staff (name, mobile, role, salary, days_worked) VALUES (%s, %s, %s, %s, %s)",
-            (name, mobile, role, int(salary), int(days_worked or 0)),
+            "INSERT INTO staff (name, mobile, role, salary, days_worked, status) VALUES (%s, %s, %s, %s, %s, %s)",
+            (name, mobile, role, int(salary), int(days_worked or 0), status),
         )
         conn.commit()
         cur.close()
@@ -1041,7 +1042,7 @@ def staff_list():
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute(
-            "SELECT id, name, mobile, role, salary, days_worked FROM staff ORDER BY id DESC"
+            "SELECT id, name, mobile, role, salary, days_worked, status FROM staff ORDER BY id DESC"
         )
         rows = cur.fetchall()
         cur.close()
@@ -1059,6 +1060,7 @@ def staff_list():
                     "days_worked": int(r["days_worked"])
                     if r["days_worked"] is not None
                     else 0,
+                    "status": (r["status"] or "offline").strip().lower(),
                 }
             )
 
@@ -1077,6 +1079,26 @@ def delete_staff(staff_id):
         cur.close()
         conn.close()
         return jsonify({"ok": True, "message": "Staff deleted"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/staff/<int:staff_id>/status", methods=["POST"])
+def update_staff_status(staff_id):
+    try:
+        data = request.get_json(force=True)
+        status = (data.get("status") or "").strip().lower()
+        if status not in ("online", "offline"):
+            return jsonify({"ok": False, "error": "Invalid status"}), 400
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE staff SET status = %s WHERE id = %s", (status, staff_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"ok": True, "status": status})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
