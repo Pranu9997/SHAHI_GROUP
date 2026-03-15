@@ -408,6 +408,9 @@ main{
     left:0;
     z-index:9999;
 }
+.topbar-spacer{
+    height:88px;
+}
 /* ===== MOBILE CLEANUP FOR OVERVIEW ===== */
 @media (max-width:768px){
   .topbar-new{
@@ -432,8 +435,12 @@ main{
     font-size:12px;
   }
 
+  .topbar-spacer{
+    height:230px;
+  }
+
   .app{
-    padding:120px 12px 20px;
+    padding:12px 12px 20px;
   }
 
   .sidebar{
@@ -685,6 +692,8 @@ main{
     </div>
 
 </div>
+
+  <div class="topbar-spacer"></div>
 
   <div class="app" role="application">
     <aside class="sidebar" aria-label="Navigation">
