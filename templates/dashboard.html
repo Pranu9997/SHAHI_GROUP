@@ -408,13 +408,62 @@ main{
     left:0;
     z-index:9999;
 }
-/* ===== MOBILE FORCE MINI ===== */
+/* ===== MOBILE CLEANUP FOR OVERVIEW ===== */
 @media (max-width:768px){
-
-  body{
-    zoom: 0.5;
+  .topbar-new{
+    height:auto;
+    padding:10px 12px;
+    flex-direction:column;
+    gap:10px;
   }
 
+  .topbar-new > div{
+    width:100%;
+    justify-content:center !important;
+    flex-wrap:wrap;
+  }
+
+  .topbar-new input{
+    width:100% !important;
+  }
+
+  .topbar-new button{
+    padding:8px 10px;
+    font-size:12px;
+  }
+
+  .app{
+    padding:120px 12px 20px;
+  }
+
+  .sidebar{
+    margin-left:0;
+  }
+
+  .panel{
+    padding:16px;
+    border-radius:18px;
+  }
+
+  .cards{
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+  }
+
+  .dashboard-card span{
+    font-size:13px;
+  }
+
+  #k_orders,
+  #k_revenue,
+  #k_tables,
+  #k_pending{
+    font-size:22px;
+  }
+
+  .summary-box{
+    gap:12px;
+  }
 }
 
 .history-wrap{
