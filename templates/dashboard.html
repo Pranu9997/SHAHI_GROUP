@@ -443,6 +443,9 @@ main{
     gap:10px;
     padding:10px;
     overflow-x:auto;
+    overflow-y:hidden;
+    height:auto;
+    position:static;
   }
   .sidebar > div:first-child{
     display:none;
@@ -450,11 +453,15 @@ main{
   .sidebar > div:last-child{
     display:flex;
     gap:8px;
+    flex-wrap:nowrap;
   }
   .sidebar > div:last-child .nav-item{
     flex:0 0 auto;
     white-space:nowrap;
     padding:10px 12px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
   }
 
   .panel{
