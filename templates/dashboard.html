@@ -418,6 +418,8 @@ main{
     padding:10px 12px;
     flex-direction:column;
     gap:10px;
+    position:sticky;
+    top:0;
   }
 
   .topbar-new > div{
@@ -436,7 +438,8 @@ main{
   }
 
   .topbar-spacer{
-    height:230px;
+    display:none;
+    height:0;
   }
 
   .app{
@@ -636,7 +639,7 @@ main{
     <div style="display:flex;align-items:center;gap:16px;">
 
         <!-- QUICK ACTION: Add Item -->
-        <button onclick="document.querySelector('#openAddItem').click()" style="
+        <button onclick="openModal()" style="
             padding:10px 16px;
             background:linear-gradient(135deg,#f5d27c,#ad7f1f);
             border:none;
@@ -1174,7 +1177,10 @@ qs('#addItemBtn').addEventListener('click', async ()=>{
 
 qs('#resetAdd').addEventListener('click', ()=>{ qs('#add_item_name').value=''; qs('#add_item_price').value=''; });
 
-qs('#openAddItem').addEventListener('click', ()=> openModal());
+const openAddItemBtn = qs('#openAddItem');
+if(openAddItemBtn){
+  openAddItemBtn.addEventListener('click', ()=> openModal());
+}
 function openModal(){ qs('#addModal').style.display='block'; qs('#modal_item_name').value=''; qs('#modal_item_price').value=''; qs('#modalMsg').textContent=''; }
 function closeModal(){ qs('#addModal').style.display='none'; }
 qs('#modalAddBtn').addEventListener('click', async ()=>{
