@@ -499,14 +499,6 @@ main{
     gap:12px;
   }
 
-  /* Menu Management: stack properly on mobile */
-  #panelMenu > div{
-    flex-direction:column;
-  }
-  #panelMenu > div > .panel{
-    width:100% !important;
-  }
-
   /* Tables: restore clean grid on mobile */
   #panelTables .table-map{
     display:grid !important;
@@ -518,6 +510,16 @@ main{
     width:100%;
     height:auto;
     min-height:90px;
+  }
+}
+
+/* Extra small phones only: stack Menu Management */
+@media (max-width:600px){
+  #panelMenu > div{
+    flex-direction:column;
+  }
+  #panelMenu > div > .panel{
+    width:100% !important;
   }
 }
 
