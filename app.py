@@ -857,6 +857,7 @@ def api_billing():
                         (table_number,),
                     )
                     pending_row = cur.fetchone()
+
                 if pending_row:
                     cur.execute(
                         """
@@ -866,6 +867,16 @@ def api_billing():
                     """,
                         (items_text, amount, pending_row[0]),
                     )
+                else:
+                    # No pending row found → create a fresh paid bill
+                    cur.execute(
+                        """
+                        INSERT INTO billing (bill_no, table_number, items, amount, status)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """,
+                        (bill_no, table_number, items_text, amount, "Paid"),
+                    )
+
                 if table_number:
                     # Ensure no pending rows remain for this table
                     cur.execute(
@@ -877,17 +888,8 @@ def api_billing():
                     """,
                         (table_number,),
                     )
-                else:
-                    cur.execute(
-                        """
-                        INSERT INTO billing (bill_no, table_number, items, amount, status)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """,
-                        (bill_no, table_number, items_text, amount, status),
-                    )
 
-                # Table ko free/available karo
-                if table_number:
+                    # Table ko free/available karo
                     cur.execute(
                         "UPDATE tables SET status = %s WHERE table_no = %s",
                         ("available", table_number),

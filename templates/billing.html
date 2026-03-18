@@ -679,7 +679,11 @@ async function submitBillToServer(payload){
   }
 }
 
-//function saveBillLocal(bill){ const bills=JSON.parse(localStorage.getItem(LS.BILLS)||'[]'); bills.unshift({...bill, created_at:new Date().toISOString()}); localStorage.setItem(LS.BILLS, JSON.stringify(bills.slice(0,20))); }
+function saveBillLocal(bill){
+  const bills = JSON.parse(localStorage.getItem(LS.BILLS) || '[]');
+  bills.unshift({ ...bill, created_at: new Date().toISOString() });
+  localStorage.setItem(LS.BILLS, JSON.stringify(bills.slice(0, 20)));
+}
 
 async function getTables(){
   try{ const r=await tryFetch(API.tables); const data=await r.json(); localStorage.setItem(LS.TABLES, JSON.stringify(data)); return data; }
@@ -1185,6 +1189,15 @@ sound.play().catch(e => console.log("Sound blocked"));
   qs('#submitBillBtn').textContent = 'Submitting...';
 
   const res = await submitBillToServer(payload);
+
+  if(res && res.ok){
+    saveBillLocal({
+      bill_no: payload.bill_no,
+      table_number: payload.table_number,
+      amount: payload.amount,
+      status: payload.status
+    });
+  }
 
   qs('#submitBillBtn').disabled = false;
   qs('#submitBillBtn').innerHTML =
