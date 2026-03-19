@@ -1289,8 +1289,23 @@ function loadTodayOrders(){
   fetch("/today-orders")
   .then(res => res.json())
   .then(data => {
+    const ordersEl = document.getElementById("k_orders");
+    const pendingEl = document.getElementById("k_pending");
+
+    if (ordersEl) {
+      ordersEl.innerText = Array.isArray(data) ? data.length : 0;
+    }
+
+    if (pendingEl) {
+      const pending = Array.isArray(data)
+        ? data.filter(row => ((row.status || "").toString().toLowerCase() === "pending")).length
+        : 0;
+      pendingEl.innerText = pending;
+    }
+
     renderBillHistory(data);
-  });
+  })
+  .catch(err => console.log(err));
 }
 
 loadTodayOrders();
