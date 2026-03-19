@@ -388,7 +388,8 @@ def today_orders():
         """
         SELECT bill_no, table_number, amount, status
         FROM billing
-        WHERE DATE(created_at) = CURRENT_DATE
+        WHERE DATE(COALESCE(created_at, NOW()) + INTERVAL '5 hours 30 minutes')
+              = DATE(NOW() + INTERVAL '5 hours 30 minutes')
         ORDER BY id DESC
     """
     )
@@ -1059,9 +1060,9 @@ def staff_list():
                     "mobile": r["mobile"],
                     "role": r["role"],
                     "salary": int(r["salary"]) if r["salary"] is not None else 0,
-                    "days_worked": int(r["days_worked"])
-                    if r["days_worked"] is not None
-                    else 0,
+                    "days_worked": (
+                        int(r["days_worked"]) if r["days_worked"] is not None else 0
+                    ),
                     "status": (r["status"] or "offline").strip().lower(),
                 }
             )
