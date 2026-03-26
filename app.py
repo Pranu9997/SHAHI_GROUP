@@ -755,9 +755,48 @@ def api_menu_add():
 
 
 # -------------------------
+# ✅ API: MENU UPDATE
+# -------------------------
+@app.route("/api/menu/update", methods=["POST"])
+def api_menu_update():
+    try:
+        data = request.get_json(force=True)
+
+        item_id = data.get("id")
+        name = (data.get("item_name") or "").strip()
+        category = (data.get("category") or "").strip()
+        price = data.get("price")
+
+        if not item_id:
+            return jsonify({"error": "Missing id"}), 400
+        if not name or price in (None, ""):
+            return jsonify({"error": "Missing item name or price"}), 400
+
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(
+            """
+            UPDATE menu
+            SET item_name = %s, category = %s, price = %s
+            WHERE id = %s
+        """,
+            (name, category, float(price), item_id),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        items = fetch_all_menu()
+        return jsonify({"items": items}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# -------------------------
 # ✅ API: MENU DELETE
 # -------------------------
-@app.route("/api/menu/delete", methods=["GET", "POST"])
+@app.route("/api/menu/delete", methods=["POST"])
 def api_menu_delete():
     try:
         data = request.get_json(force=True)
