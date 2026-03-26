@@ -712,8 +712,9 @@ main{
 
       <div>
         <div class="nav-item active" data-target="panelOverview"><i class="fa fa-tachometer-alt"></i> Overview</div>
-        
-
+        <div class="nav-item" onclick="location.href='/billing'">
+    <i class="fa fa-utensils"></i> Menu Management
+</div>
 
         <div class="nav-item" onclick="location.href='/billing'">
     <i class="fa fa-receipt"></i> Billing / POS
@@ -807,6 +808,7 @@ main{
        <div class="summary-right" style="width:100%">
             <div style="font-weight:700;color:var(--gold)">Quick Actions</div>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+              <button class="btn ghost" onclick="location.href='/billing'"><i class="fa fa-utensils"></i> Menu Management</button>
               <button class="btn" id="navCreateBill"><i class="fa fa-plus"></i> New Bill</button>
             </div>
           </div>
