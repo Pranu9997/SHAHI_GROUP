@@ -519,6 +519,16 @@ main{
 
 
 
+/* Extra small phones only: stack Menu Management */
+@media (max-width:600px){
+  #panelMenu > div{
+    flex-direction:column;
+  }
+  #panelMenu > div > .panel{
+    width:100% !important;
+  }
+}
+
 .history-wrap{
   margin-top:14px;
   overflow:auto;
@@ -657,6 +667,20 @@ main{
     <!-- RIGHT PANEL: ACTIONS + USER -->
     <div style="display:flex;align-items:center;gap:16px;">
 
+        <!-- QUICK ACTION: Add Item -->
+        <button onclick="openModal()" style="
+            padding:10px 16px;
+            background:linear-gradient(135deg,#f5d27c,#ad7f1f);
+            border:none;
+            border-radius:12px;
+            color:#111;
+            font-weight:700;
+            cursor:pointer;
+            box-shadow:0 4px 16px rgba(255,215,110,0.4);
+        ">
+            <i class="fa fa-plus"></i> Add Item
+        </button>
+
         <!-- QUICK ACTION: New Bill -->
         <button onclick="document.querySelector('#navCreateBill').click()" style="
             padding:10px 16px;
@@ -712,9 +736,7 @@ main{
 
       <div>
         <div class="nav-item active" data-target="panelOverview"><i class="fa fa-tachometer-alt"></i> Overview</div>
-        <div class="nav-item" onclick="location.href='/billing'">
-    <i class="fa fa-utensils"></i> Menu Management
-</div>
+        <div class="nav-item" data-target="panelMenu"><i class="fa fa-utensils"></i> Menu</div>
 
         <div class="nav-item" onclick="location.href='/billing'">
     <i class="fa fa-receipt"></i> Billing / POS
@@ -808,8 +830,8 @@ main{
        <div class="summary-right" style="width:100%">
             <div style="font-weight:700;color:var(--gold)">Quick Actions</div>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-              <button class="btn ghost" onclick="location.href='/billing'"><i class="fa fa-utensils"></i> Menu Management</button>
               <button class="btn" id="navCreateBill"><i class="fa fa-plus"></i> New Bill</button>
+              <button class="btn ghost" id="navFindMenu"><i class="fa fa-utensils"></i> Find Menu</button>
             </div>
           </div>
         </div>
@@ -837,6 +859,48 @@ main{
         </div>
       </section>
 
+      <section id="panelMenu" class="panel section" style="display:none">
+        <h2>Menu Management</h2>
+        <div class="muted">Add new items, edit or delete existing items.</div>
+
+        <div style="display:flex;gap:18px;margin-top:12px;align-items:flex-start">
+          <div style="width:320px" class="panel">
+              <div style="font-weight:700">Add Item</div>
+              <div style="margin-top:10px">
+              <input type="hidden" id="edit_item_id">
+              <label>Item name</label>
+              <input id="add_item_name" placeholder="e.g. Shahi Mutton Biryani">
+              <label style="margin-top:8px">Category</label>
+              <select id="add_item_cat">
+                <option>Non-Veg</option>
+                <option>Veg</option>
+              </select>
+              <label style="margin-top:8px">Price (₹)</label>
+              <input id="add_item_price" type="number" step="0.01" placeholder="e.g. 240.00">
+              <div style="display:flex;gap:10px;margin-top:10px">
+                <button class="btn" id="addItemBtn"><i class="fa fa-plus"></i> Add Item</button>
+                <button class="btn secondary" id="saveEditBtn" style="display:none"><i class="fa fa-pen"></i> Save Edit</button>
+                <button class="btn ghost" id="resetAdd">Reset</button>
+              </div>
+              <div id="addMsg" style="margin-top:8px;color:var(--muted);font-size:13px"></div>
+            </div>
+          </div>
+
+          <div style="flex:1" class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="font-weight:700">Menu Items</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="menuFilter" placeholder="Search menu..." style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:#fff">
+                <div class="muted">Total: <span id="menuCount">0</span></div>
+              </div>
+            </div>
+
+            <div class="menu-list" id="menuList">
+            </div>
+          </div>
+        </div>
+      </section>
+
      
       <section id="panelTables" class="panel section"  style="display:none">
         <h2>Tables</h2>
@@ -858,17 +922,127 @@ main{
     </main>
   </div>
 
+  <div id="addModal" style="display:none">
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Add New Item</div>
+          <button class="btn ghost" id="closeModal"><i class="fa fa-times"></i></button>
+        </div>
+        <div style="margin-top:12px">
+          <label>Item name</label>
+          <input id="modal_item_name" placeholder="e.g. Shahi Mutton Biryani">
+          <label style="margin-top:8px">Category</label>
+          <select id="modal_item_cat"><option>Non-Veg</option><option>Veg</option></select>
+          <label style="margin-top:8px">Price (₹)</label>
+          <input id="modal_item_price" type="number" step="0.01" placeholder="e.g. 240.00">
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" id="modalAddBtn">Add</button>
+            <button class="btn ghost" id="modalCancelBtn">Cancel</button>
+          </div>
+          <div id="modalMsg" style="margin-top:8px;color:var(--muted)"></div>
+        </div>
+      </div>
+    </div>
   
 
  <script>
 
 
-const API = { tables:'/api/tables' };
-const LS = { TABLES:'smk_tables_v2' };
+const API = { items:'/api/items', addItem:'/api/menu/add', updateItem:'/api/menu/update', deleteItem:'/api/menu/delete', tables:'/api/tables' };
+const LS = { ITEMS:'smk_items_v2', TABLES:'smk_tables_v2' };
 const qs = s => document.querySelector(s);
 const qsa = s => Array.from(document.querySelectorAll(s));
 function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 async function tryFetch(url, opts={}, timeout=3500){ const controller=new AbortController(); const id=setTimeout(()=>controller.abort(),timeout); try{ const res=await fetch(url,{...opts,signal:controller.signal}); clearTimeout(id); if(!res.ok) throw new Error('Bad response'); return res; }catch(e){ clearTimeout(id); throw e; } }
+let editingMenuId = null;
+
+
+/* Data layer */
+async function getItems(){
+  try{ const r=await tryFetch(API.items); const data=await r.json(); localStorage.setItem(LS.ITEMS, JSON.stringify(data)); return data; }
+  catch(e){ const local=localStorage.getItem(LS.ITEMS); if(local) return JSON.parse(local); localStorage.setItem(LS.ITEMS, JSON.stringify(demoItems)); return demoItems; }
+}
+function saveItemsLocal(items){
+  localStorage.setItem(LS.ITEMS, JSON.stringify(items));
+}
+
+function resetMenuForm(){
+  editingMenuId = null;
+  const hiddenId = qs('#edit_item_id');
+  if(hiddenId) hiddenId.value = '';
+  qs('#add_item_name').value = '';
+  qs('#add_item_cat').value = 'Non-Veg';
+  qs('#add_item_price').value = '';
+  qs('#addMsg').textContent = '';
+  qs('#addItemBtn').style.display = '';
+  qs('#saveEditBtn').style.display = 'none';
+}
+
+function startEditItem(item){
+  editingMenuId = item.id;
+  const hiddenId = qs('#edit_item_id');
+  if(hiddenId) hiddenId.value = item.id;
+  qs('#add_item_name').value = item.item_name || '';
+  qs('#add_item_cat').value = item.category || 'Non-Veg';
+  qs('#add_item_price').value = item.price ?? '';
+  qs('#addMsg').textContent = 'Edit mode active';
+  qs('#addItemBtn').style.display = 'none';
+  qs('#saveEditBtn').style.display = '';
+}
+async function addItemToServer(payload){
+  try{
+    const r = await tryFetch(API.addItem,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+
+    const json = await r.json();
+
+    if(json && json.items)
+        saveItemsLocal(json.items);
+
+    return json.items || json;
+  }
+  catch(e){
+    const arr = JSON.parse(localStorage.getItem(LS.ITEMS)||'[]');
+    const id = arr.length ? Math.max(...arr.map(x=>x.id))+1 : 1;
+
+    arr.unshift({
+      id,
+      item_name:payload.item_name,
+      category:payload.category,
+      price:parseFloat(payload.price)
+    });
+
+    localStorage.setItem(LS.ITEMS, JSON.stringify(arr));
+
+    return arr;
+  }
+}
+
+async function updateItemOnServer(payload){
+  const r = await tryFetch(API.updateItem,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  const json = await r.json();
+  if(json && json.items) saveItemsLocal(json.items);
+  return json.items || json;
+}
+
+async function deleteItemFromServer(id){
+  const r = await tryFetch(API.deleteItem,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id})
+  });
+  const json = await r.json();
+  if(json && json.items) saveItemsLocal(json.items);
+  return json.items || json;
+}
 
 
 async function getTables(){
@@ -997,14 +1171,146 @@ function renderBillHistory(rows) {
 }
 
 
+/* RENDERERS */
+async function renderMenuList(){
+  const items = await getItems();
+  const list = qs('#menuList'); 
+ 
+
+  // ✅ Safety check
+if(!list){
+   return;
+}
+
+  list.innerHTML = ''; 
+  
+
+  items.forEach(it=>{
+    const html = `
+      <div class="menu-item">
+        <div class="meta">
+          <div class="name">${escapeHtml(it.item_name)}</div>
+          <div class="cat">${escapeHtml(it.category)}</div>
+        </div>
+
+        <div class="menu-actions">
+          <div class="price">₹ ${parseFloat(it.price).toFixed(2)}</div>
+          <button class="menu-btn edit" data-role="edit-item" data-id="${it.id}">
+            <i class="fa fa-pen"></i> Edit
+          </button>
+          <button class="menu-btn delete" data-role="delete-item" data-id="${it.id}">
+            <i class="fa fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    `;
+
+    list.insertAdjacentHTML('beforeend', html);
+  });
+
+  qsa('[data-role="edit-item"]').forEach(btn =>
+    btn.addEventListener('click', ()=>{
+      const item = items.find(x => String(x.id) === String(btn.dataset.id));
+      if(item) startEditItem(item);
+    })
+  );
+
+  qsa('[data-role="delete-item"]').forEach(btn =>
+    btn.addEventListener('click', async ()=>{
+      const item = items.find(x => String(x.id) === String(btn.dataset.id));
+      if(!item) return;
+      if(!confirm(`Delete "${item.item_name}"?`)) return;
+      qs('#addMsg').textContent = 'Deleting...';
+      await deleteItemFromServer(item.id);
+      if(String(editingMenuId) === String(item.id)) resetMenuForm();
+      await renderMenuList();
+      qs('#addMsg').textContent = 'Item deleted';
+      setTimeout(()=>{
+        if(qs('#addMsg').textContent === 'Item deleted') qs('#addMsg').textContent = '';
+      },1200);
+    })
+  );
+
+  qs('#menuCount').textContent = items.length;
+}
+
 
 
 
 
 /* ========== Dashboard UI ========== */
 
+/* ---------- UI Handlers (modal safe using closest) ---------- */
+document.addEventListener('click', e=>{
+  const t = e.target.closest('#modalCancelBtn, #closeModal, #modalBackdrop');
+  if(t) closeModal();
+});
 
+/* Add item form handlers */
+qs('#addItemBtn').addEventListener('click', async ()=>{
+  const name = qs('#add_item_name').value.trim(); 
+  const cat = qs('#add_item_cat').value; 
+  const price = qs('#add_item_price').value;
 
+  if(!name || !price){ 
+    qs('#addMsg').textContent = 'Provide name and price'; 
+    return; 
+  }
+
+  qs('#addMsg').textContent = 'Adding...';
+
+  await addItemToServer({
+    item_name: name,
+    category: cat,
+    price: price
+  });
+
+  await renderMenuList();
+  resetMenuForm();
+  qs('#addMsg').textContent = 'Added'; 
+
+  setTimeout(()=>qs('#addMsg').textContent='',1200);
+});
+
+qs('#saveEditBtn').addEventListener('click', async ()=>{
+  const id = editingMenuId || qs('#edit_item_id').value;
+  const name = qs('#add_item_name').value.trim();
+  const cat = qs('#add_item_cat').value;
+  const price = qs('#add_item_price').value;
+
+  if(!id || !name || !price){
+    qs('#addMsg').textContent = 'Provide name and price';
+    return;
+  }
+
+  qs('#addMsg').textContent = 'Saving...';
+  await updateItemOnServer({
+    id,
+    item_name: name,
+    category: cat,
+    price
+  });
+  await renderMenuList();
+  resetMenuForm();
+  qs('#addMsg').textContent = 'Item updated';
+  setTimeout(()=>qs('#addMsg').textContent='',1200);
+});
+
+qs('#resetAdd').addEventListener('click', ()=>{ resetMenuForm(); });
+
+const openAddItemBtn = qs('#openAddItem');
+if(openAddItemBtn){
+  openAddItemBtn.addEventListener('click', ()=> openModal());
+}
+function openModal(){ qs('#addModal').style.display='block'; qs('#modal_item_name').value=''; qs('#modal_item_price').value=''; qs('#modalMsg').textContent=''; }
+function closeModal(){ qs('#addModal').style.display='none'; }
+qs('#modalAddBtn').addEventListener('click', async ()=>{
+  const name = qs('#modal_item_name').value.trim(); const cat = qs('#modal_item_cat').value; const price = qs('#modal_item_price').value;
+  if(!name || !price){ qs('#modalMsg').textContent = 'Fill name & price'; return; }
+  qs('#modalMsg').textContent = 'Adding...';
+  await addItemToServer({item_name:name,category:cat,price:price});
+  await renderMenuList(); closeModal();
+});
 
 /* Navigation */
 qsa('.nav-item').forEach(nav=>{
@@ -1030,10 +1336,39 @@ qsa('.nav-item').forEach(nav=>{
   });
 });
 
+/* Filters & search */
+const menuFilter = qs('#menuFilter');
+if(menuFilter){
+  menuFilter.addEventListener('input', e=>{
+    const q=e.target.value.toLowerCase();
+    qsa('#menuList .menu-item').forEach(tr=>{
+      tr.style.display = (q==='' || tr.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
+  });
+}
+
+qs('#globalSearch').addEventListener('input', e=>{ const q=e.target.value.toLowerCase(); qsa('.menu-item').forEach(mi=> mi.style.display = (q==='' || mi.textContent.toLowerCase().includes(q)) ? '' : 'none'); qsa('.table-unit').forEach(tu=> tu.style.display = (q==='' || tu.textContent.toLowerCase().includes(q)) ? '' : 'none'); });
+
+/* Other buttons */
+qs('#navCreateBill').onclick = ()=>{
+   window.location.href="/billing";
+};
+
+qs('#navFindMenu').onclick = ()=>{
+   document.querySelector('[data-target="panelMenu"]').click();
+};
+
+const generateReportBtn = qs('#generateReport');
+if(generateReportBtn){
+  generateReportBtn.onclick = ()=>{
+    window.open('/reports/bills/pdf', '_blank');
+  };
+}
+
 /* Init */
 async function init(){ 
   try{ 
-   
+    await renderMenuList(); 
     await loadTables();
 
   }catch(e){ 
